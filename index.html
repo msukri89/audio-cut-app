@@ -319,12 +319,10 @@ async function loadFile(file) {
     if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
     state.audioBuffer = await state.audioCtx.decodeAudioData(await file.arrayBuffer());
     
-    // Tampilkan UI Card
     uploadCard.classList.add('hidden'); playerCard.classList.remove('hidden');
     cutBtn.classList.remove('hidden'); resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    // Generate gelombang SETELAH container terlihat
     setTimeout(() => {
         generatePeaks(state.audioBuffer);
     }, 50);
@@ -351,7 +349,6 @@ audioEl.addEventListener('ended', () => { playIcon.style.display = 'block'; paus
 audioEl.addEventListener('timeupdate', () => {
   const cur = audioEl.currentTime;
   
-  // PEMBATASAN AUDIO: Otomatis berhenti/loop jika melewati area slider akhir
   if (cur >= state.endTime && !audioEl.paused) {
     audioEl.pause();
     audioEl.currentTime = state.startTime;
@@ -368,7 +365,6 @@ progressTrack.addEventListener('click', (e) => {
   audioEl.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * state.duration;
 });
 
-// Waveform (Gelombang Suara Berbentuk Irama)
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
@@ -381,8 +377,7 @@ function generatePeaks(buffer) {
   const data = buffer.getChannelData(0); 
   const width = waveformCanvas.clientWidth;
   
-  // Membagi gelombang menjadi batang irama agar tidak polosan
-  const barWidth = 3; // 2px warna + 1px jarak
+  const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
   const samplesPerBar = Math.floor(data.length / numBars);
   state.peaks = [];
@@ -412,27 +407,10 @@ function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
   ctx.clearRect(0, 0, width, height); 
   
-  // Menggambar Penggaris Menit/Detik
-  const rulerHeight = 20;
-  ctx.fillStyle = '#8E8E93';
-  ctx.font = '11px sans-serif';
-  ctx.textBaseline = 'top';
-  
-  // Atur interval tiap 5 detik atau lebih tergantung durasi audio
-  let interval = 5;
-  if(state.duration > 180) interval = 15;
-  if(state.duration > 600) interval = 30;
-  if(state.duration > 1800) interval = 60;
-  
-  for (let t = 0; t <= state.duration; t += interval) {
-    const x = (t / state.duration) * width;
-    ctx.fillRect(x, 8, 1, 6); 
-    ctx.fillText(formatTime(t), x + 4, 3);
-  }
-
-  // Menggambar Gelombang Irama
-  const waveTop = rulerHeight + 10;
-  const waveHeight = height - waveTop - 5;
+  // Menggambar Gelombang Irama Simetris Tanpa Penggaris Atas
+  const padding = 10;
+  const waveTop = padding;
+  const waveHeight = height - (padding * 2);
   const mid = waveTop + (waveHeight / 2);
   
   for (let i = 0; i < state.peaks.length; i++) {
@@ -443,11 +421,10 @@ function drawWaveform() {
     const yMax = mid + (pk.max * waveHeight / 2);
     const h = Math.max(2, yMax - yMin);
     
-    // Mewarnai Area Potongan Terang, Sisanya Redup
     if (timeAtBar >= state.startTime && timeAtBar <= state.endTime) {
-        ctx.fillStyle = '#007AFF'; // Biru terang untuk area yang dipilih
+        ctx.fillStyle = '#007AFF'; 
     } else {
-        ctx.fillStyle = '#D1D1D6'; // Abu-abu redup untuk area terbuang
+        ctx.fillStyle = '#D1D1D6'; 
     }
     ctx.fillRect(x, yMin, state.barWidth - 1, h);
   }
@@ -466,7 +443,7 @@ function onDrag(e) {
     state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time;
   } else {
     if (time <= state.startTime) time = state.startTime + 0.1; if (time > state.duration) time = state.duration;
-    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time - 0.5; // Mundur dikit saat digeser akhir
+    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time - 0.5; 
   }
   updateWaveformUI();
 }
@@ -476,8 +453,6 @@ handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
 handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'));
 handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
 
-
-// === SISTEM BOTTOM SHEET BARU (WHEEL & KETIK) ===
 function populateWheels() {
   const maxMin = Math.floor(state.duration / 60);
   wheelMin.innerHTML = '';
@@ -519,7 +494,6 @@ wheelSec.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wh
 sheetMin.addEventListener('input', syncInputsToWheels);
 sheetSec.addEventListener('input', syncInputsToWheels);
 
-// Saat kotak utama ditekan, buka sheet
 function openTimeSheet(target) {
   activeTarget = target;
   sheetTitle.textContent = target === 'start' ? 'Atur Waktu Mulai' : 'Atur Waktu Selesai';
@@ -544,7 +518,6 @@ startInput.addEventListener('click', () => openTimeSheet('start'));
 endInput.addEventListener('click', () => openTimeSheet('end'));
 timeSheet.addEventListener('click', (e) => { if (e.target === timeSheet) timeSheet.classList.remove('show'); });
 
-// Tombol Simpan Waktu di dalam Sheet
 sheetDoneBtn.addEventListener('click', () => {
    let m = parseInt(sheetMin.value) || 0;
    let s = parseInt(sheetSec.value) || 0;
@@ -567,7 +540,6 @@ sheetDoneBtn.addEventListener('click', () => {
    updateWaveformUI();
    timeSheet.classList.remove('show');
 });
-
 
 // MP3 Encoding
 function floatTo16(float32Array) { const int16Array = new Int16Array(float32Array.length); for (let i = 0; i < float32Array.length; i++) { const s = Math.max(-1, Math.min(1, float32Array[i])); int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF; } return int16Array; }
@@ -636,7 +608,6 @@ resetBtn.addEventListener('click', () => {
   playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
 });
 
-// Output Page Logic
 async function loadOutputs() {
   const items = await getOutputs(); const listEl = document.getElementById('outputList');
   listEl.innerHTML = '';
