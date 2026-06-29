@@ -2,7 +2,7 @@
   "name": "Audio Cut Pro",
   "short_name": "AudioCut",
   "description": "Aplikasi potong audio elegan",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#F2F2F7",
   "theme_color": "#F2F2F7",
