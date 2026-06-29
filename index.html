@@ -68,19 +68,17 @@ body {
 .progress-fill { position: absolute; height: 100%; background: var(--accent); border-radius: 3px; left: 0; top: 0; width: 0%; }
 .progress-thumb { position: absolute; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; top: 50%; transform: translate(-50%, -50%); left: 0%; box-shadow: 0 1px 4px rgba(0,122,255,0.4); border: 2px solid white; box-sizing: border-box; }
 
-.waveform-container { position: relative; width: 100%; height: 80px; margin-top: 10px; touch-action: none; }
-#waveformCanvas { width: 100%; height: 100%; display: block; border-radius: 8px; }
-.wave-handle { position: absolute; top: 0; width: 4px; height: 100%; background: var(--accent); z-index: 10; transform: translateX(-50%); touch-action: none; }
-.wave-handle::before { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 24px; height: 28px; background: var(--accent); border-radius: 6px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.waveform-container { position: relative; width: 100%; height: 120px; margin-top: 10px; touch-action: none; background: #FAFAFA; border-radius: 8px; border: 1px solid var(--separator); overflow: hidden; }
+#waveformCanvas { width: 100%; height: 100%; display: block; }
+.wave-handle { position: absolute; top: 0; width: 2px; height: 100%; background: var(--accent); z-index: 10; transform: translateX(-50%); touch-action: none; }
+.wave-handle::before { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 20px; height: 28px; background: var(--accent); border-radius: 4px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 
 .time-inputs { display: flex; gap: 12px; margin-top: 4px; }
 .time-field { flex: 1; }
 .time-field .field-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
 .input-row { display: flex; gap: 8px; align-items: center; }
-.time-input { flex: 1; width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--separator-strong); background: var(--card); font-size: 17px; font-family: inherit; font-variant-numeric: tabular-nums; text-align: center; color: var(--text); font-weight: 500; }
+.time-input { flex: 1; width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--separator-strong); background: var(--card); font-size: 17px; font-family: inherit; font-variant-numeric: tabular-nums; text-align: center; color: var(--text); font-weight: 500; cursor: pointer; }
 .time-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
-.slider-btn { width: 48px; padding: 14px 0; border-radius: 12px; border: 1px solid var(--separator-strong); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.slider-btn svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 .btn { display: block; width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--accent); color: white; font-size: 17px; font-weight: 600; cursor: pointer; font-family: inherit; transition: transform 0.1s ease, background 0.2s ease, opacity 0.2s ease; letter-spacing: -0.2px; }
 .btn:active { transform: scale(0.98); background: var(--accent-pressed); }
@@ -110,14 +108,14 @@ body {
 .sheet-handle { width: 36px; height: 5px; background: var(--text-tertiary); border-radius: 3px; margin: 8px auto 4px; }
 .sheet-header { text-align: center; padding: 8px 16px; border-bottom: 0.5px solid var(--separator); }
 .sheet-title { font-size: 17px; font-weight: 600; color: var(--text); }
-.sheet-body { padding: 16px; display: flex; flex-direction: column; gap: 20px; background: var(--card); margin: 16px; border-radius: 14px; }
-.sheet-row { display: flex; align-items: center; gap: 16px; }
-.sheet-label { font-size: 15px; font-weight: 500; width: 50px; color: var(--text); }
-.ios-slider { -webkit-appearance: none; appearance: none; flex: 1; height: 4px; background: var(--separator); border-radius: 2px; outline: none; }
-.ios-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: white; box-shadow: 0 3px 8px rgba(0,0,0,0.15); cursor: pointer; border: 0.5px solid rgba(0,0,0,0.04); }
-.ios-slider::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: white; box-shadow: 0 3px 8px rgba(0,0,0,0.15); cursor: pointer; border: 0.5px solid rgba(0,0,0,0.04); }
+.sheet-body { padding: 16px; background: var(--card); margin: 16px; border-radius: 14px; }
 .sheet-footer { padding: 16px; padding-top: 0; }
-.sheet-done-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--accent); color: white; font-size: 17px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+.wheel-picker { display: flex; position: relative; height: 150px; background: #FAFAFA; border-radius: 12px; border: 1px solid var(--separator); overflow: hidden; }
+.wheel-overlay { position: absolute; top: 50px; left: 0; right: 0; height: 50px; background: rgba(0, 122, 255, 0.08); border-top: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); pointer-events: none; z-index: 2; }
+.wheel { flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; padding: 50px 0; scrollbar-width: none; position: relative; z-index: 1; }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel-item { height: 50px; line-height: 50px; text-align: center; scroll-snap-align: center; font-size: 22px; font-weight: 600; color: var(--text); }
 
 .toast { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.82); color: white; padding: 12px 20px; border-radius: 14px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 300; max-width: 90%; text-align: center; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -127,7 +125,6 @@ audio { display: none; }
 </head>
 <body>
 <div class="app">
-  <!-- PRODUKSI PAGE -->
   <div id="produksiPage" class="page active">
     <div class="nav-bar"><div class="title">Audio Cut</div></div>
 
@@ -137,7 +134,7 @@ audio { display: none; }
         <div class="title">Pilih Audio</div>
       </div>
       <div class="card-body">
-        <label class="dropzone" id="dropzone">
+        <label class="dropzone" id="dropzone" for="fileInput">
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           </div>
@@ -178,21 +175,15 @@ audio { display: none; }
         <div style="height: 18px;"></div>
         <div class="time-inputs">
           <div class="time-field">
-            <div class="field-label">Mulai (mm:ss)</div>
+            <div class="field-label">Mulai (Ketuk untuk ubah)</div>
             <div class="input-row">
-              <input type="text" class="time-input" id="startInput" value="0:00" inputmode="numeric">
-              <button class="slider-btn" id="startSliderBtn">
-                <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-              </button>
+              <input type="text" class="time-input" id="startInput" value="0:00" readonly placeholder="Mulai">
             </div>
           </div>
           <div class="time-field">
-            <div class="field-label">Selesai (mm:ss)</div>
+            <div class="field-label">Selesai (Ketuk untuk ubah)</div>
             <div class="input-row">
-              <input type="text" class="time-input" id="endInput" value="0:00" inputmode="numeric">
-              <button class="slider-btn" id="endSliderBtn">
-                <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-              </button>
+              <input type="text" class="time-input" id="endInput" value="0:00" readonly placeholder="Selesai">
             </div>
           </div>
         </div>
@@ -203,14 +194,12 @@ audio { display: none; }
     <button class="btn btn-secondary hidden" id="resetBtn">Pilih Audio Lain</button>
   </div>
 
-  <!-- OUTPUT PAGE -->
   <div id="outputPage" class="page">
     <div class="nav-bar"><div class="title">Output</div></div>
     <div id="outputList" class="output-list"></div>
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <div class="nav-item active" data-page="produksi">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
@@ -222,16 +211,24 @@ audio { display: none; }
   </div>
 </div>
 
-<!-- CUSTOM SLIDER SHEET -->
-<div class="sheet-overlay" id="sliderSheet">
+<div class="sheet-overlay" id="timeSheet">
   <div class="sheet-card">
     <div class="sheet-handle"></div>
     <div class="sheet-header"><div class="sheet-title" id="sheetTitle">Set Waktu</div></div>
     <div class="sheet-body">
-      <div class="sheet-row"><span class="sheet-label">Menit</span><input type="range" min="0" max="0" value="0" id="minSlider" class="ios-slider"></div>
-      <div class="sheet-row"><span class="sheet-label">Detik</span><input type="range" min="0" max="59" value="0" id="secSlider" class="ios-slider"></div>
+      <div style="text-align:center; font-size:13px; color:var(--text-secondary); margin-bottom:8px;">Ketik manual di bawah ini, atau geser roda:</div>
+      <div style="display:flex; justify-content:center; gap:12px; margin-bottom:16px;">
+         <input type="number" id="sheetMin" class="time-input" placeholder="Menit" min="0" style="width: 90px; text-align: center;">
+         <span style="font-size: 20px; font-weight: bold; align-self: center;">:</span>
+         <input type="number" id="sheetSec" class="time-input" placeholder="Detik" min="0" max="59" style="width: 90px; text-align: center;">
+      </div>
+      <div class="wheel-picker">
+        <div class="wheel-overlay"></div>
+        <div class="wheel" id="wheelMin"></div>
+        <div class="wheel" id="wheelSec"></div>
+      </div>
     </div>
-    <div class="sheet-footer"><button class="sheet-done-btn" id="sheetDoneBtn">Selesai</button></div>
+    <div class="sheet-footer"><button class="btn" id="sheetDoneBtn">Simpan Waktu</button></div>
   </div>
 </div>
 
@@ -240,13 +237,13 @@ audio { display: none; }
 
 <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
 <script>
-const state = { audioBuffer: null, audioCtx: null, fileName: '', duration: 0, startTime: 0, endTime: 0, peaks: [], startPx: 0, endPx: 0 };
+const state = { audioBuffer: null, audioCtx: null, fileName: '', duration: 0, startTime: 0, endTime: 0, peaks: [], barWidth: 3, startPx: 0, endPx: 0 };
 let db;
 let draggingHandle = null;
 let activeTarget = null;
+let wheelScrollTimeout;
 
 const fileInput = document.getElementById('fileInput');
-const dropzone = document.getElementById('dropzone');
 const uploadCard = document.getElementById('uploadCard');
 const playerCard = document.getElementById('playerCard');
 const audioEl = document.getElementById('audio');
@@ -268,15 +265,19 @@ const endInput = document.getElementById('endInput');
 const cutBtn = document.getElementById('cutBtn');
 const resetBtn = document.getElementById('resetBtn');
 const toast = document.getElementById('toast');
-const sliderSheet = document.getElementById('sliderSheet');
+
+// Time Sheet Elements
+const timeSheet = document.getElementById('timeSheet');
 const sheetTitle = document.getElementById('sheetTitle');
-const minSlider = document.getElementById('minSlider');
-const secSlider = document.getElementById('secSlider');
+const sheetMin = document.getElementById('sheetMin');
+const sheetSec = document.getElementById('sheetSec');
+const wheelMin = document.getElementById('wheelMin');
+const wheelSec = document.getElementById('wheelSec');
 const sheetDoneBtn = document.getElementById('sheetDoneBtn');
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => toast.classList.remove('show'), 2400); }
 function formatTime(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
-function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } if (parts.length === 3) { return (parseInt(parts[0]) || 0) * 3600 + (parseInt(parts[1]) || 0) * 60 + (parseFloat(parts[2]) || 0); } return 0; }
+function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } return 0; }
 
 // IndexedDB Setup
 function openDB() { return new Promise((resolve) => { const req = indexedDB.open('AudioCutDB', 1); req.onupgradeneeded = (e) => { const d = e.target.result; if (!d.objectStoreNames.contains('outputs')) d.createObjectStore('outputs', { keyPath: 'id', autoIncrement: true }); }; req.onsuccess = (e) => { db = e.target.result; resolve(); }; }); }
@@ -284,10 +285,8 @@ async function saveOutputToDB(name, blob) { return new Promise((resolve) => { co
 async function getOutputs() { return new Promise((resolve) => { const tx = db.transaction('outputs', 'readonly'); tx.objectStore('outputs').getAll().onsuccess = (e) => resolve(e.target.result); }); }
 async function deleteOutput(id) { return new Promise((resolve) => { const tx = db.transaction('outputs', 'readwrite'); tx.objectStore('outputs').delete(id).onsuccess = () => resolve(); }); }
 
-// PWA Setup
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW err', err))); }
 
-// Navigation
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -301,7 +300,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 // File Upload
-dropzone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) await loadFile(file); });
 
 async function loadFile(file) {
@@ -320,33 +318,57 @@ async function loadFile(file) {
     if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
     state.audioBuffer = await state.audioCtx.decodeAudioData(await file.arrayBuffer());
-    generatePeaks(state.audioBuffer);
-
+    
+    // Tampilkan UI Card
     uploadCard.classList.add('hidden'); playerCard.classList.remove('hidden');
     cutBtn.classList.remove('hidden'); resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
+    
+    // Generate gelombang SETELAH container terlihat
+    setTimeout(() => {
+        generatePeaks(state.audioBuffer);
+    }, 50);
+
     showToast('Audio siap dipotong');
   } catch (err) { showToast('Gagal memuat audio'); console.error(err); }
 }
 
 // Audio Player
-playBtn.addEventListener('click', () => { if (audioEl.paused) audioEl.play(); else audioEl.pause(); });
+playBtn.addEventListener('click', () => { 
+  if (audioEl.paused) {
+    if (audioEl.currentTime < state.startTime || audioEl.currentTime >= state.endTime) {
+      audioEl.currentTime = state.startTime;
+    }
+    audioEl.play(); 
+  } else { 
+    audioEl.pause(); 
+  }
+});
 audioEl.addEventListener('play', () => { playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; });
 audioEl.addEventListener('pause', () => { playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; });
 audioEl.addEventListener('ended', () => { playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; });
+
 audioEl.addEventListener('timeupdate', () => {
   const cur = audioEl.currentTime;
+  
+  // PEMBATASAN AUDIO: Otomatis berhenti/loop jika melewati area slider akhir
+  if (cur >= state.endTime && !audioEl.paused) {
+    audioEl.pause();
+    audioEl.currentTime = state.startTime;
+  }
+  
   currentTimeEl.textContent = formatTime(cur);
   const pct = state.duration ? (cur / state.duration) * 100 : 0;
   progressFill.style.width = pct + '%'; progressThumb.style.left = pct + '%';
 });
+
 progressTrack.addEventListener('click', (e) => {
   if (!state.duration) return;
   const rect = progressTrack.getBoundingClientRect();
   audioEl.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * state.duration;
 });
 
-// Waveform
+// Waveform (Gelombang Suara Berbentuk Irama)
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
@@ -355,13 +377,28 @@ function setupCanvas() {
   return { ctx, width: rect.width, height: rect.height };
 }
 function generatePeaks(buffer) {
-  const data = buffer.getChannelData(0); const width = waveformCanvas.clientWidth;
-  const samplesPerPx = Math.floor(data.length / width); state.peaks = [];
-  for (let x = 0; x < width; x++) {
-    let min = 1.0, max = -1.0; const s = x * samplesPerPx; const e = s + samplesPerPx;
-    for (let i = s; i < e; i++) { const v = data[i]; if (v < min) min = v; if (v > max) max = v; }
+  if(waveformCanvas.clientWidth === 0) return;
+  const data = buffer.getChannelData(0); 
+  const width = waveformCanvas.clientWidth;
+  
+  // Membagi gelombang menjadi batang irama agar tidak polosan
+  const barWidth = 3; // 2px warna + 1px jarak
+  const numBars = Math.floor(width / barWidth);
+  const samplesPerBar = Math.floor(data.length / numBars);
+  state.peaks = [];
+  
+  for (let i = 0; i < numBars; i++) {
+    let min = 1.0, max = -1.0; 
+    const s = i * samplesPerBar; 
+    const e = s + samplesPerBar;
+    for (let j = s; j < e; j++) { 
+        const v = data[j]; 
+        if (v < min) min = v; 
+        if (v > max) max = v; 
+    }
     state.peaks.push({ min, max });
   }
+  state.barWidth = barWidth;
   updateWaveformUI();
 }
 function updateWaveformUI() {
@@ -373,13 +410,46 @@ function updateWaveformUI() {
 }
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
-  ctx.clearRect(0, 0, width, height); const mid = height / 2;
-  for (let x = 0; x < width; x++) {
-    if (!state.peaks[x]) continue;
-    const yMin = mid + (state.peaks[x].min * mid); const yMax = mid + (state.peaks[x].max * mid);
-    const h = Math.max(1, yMax - yMin);
-    ctx.fillStyle = (x >= state.startPx && x <= state.endPx) ? '#007AFF' : '#D1D1D6';
-    ctx.fillRect(x, yMin, 1, h);
+  ctx.clearRect(0, 0, width, height); 
+  
+  // Menggambar Penggaris Menit/Detik
+  const rulerHeight = 20;
+  ctx.fillStyle = '#8E8E93';
+  ctx.font = '11px sans-serif';
+  ctx.textBaseline = 'top';
+  
+  // Atur interval tiap 5 detik atau lebih tergantung durasi audio
+  let interval = 5;
+  if(state.duration > 180) interval = 15;
+  if(state.duration > 600) interval = 30;
+  if(state.duration > 1800) interval = 60;
+  
+  for (let t = 0; t <= state.duration; t += interval) {
+    const x = (t / state.duration) * width;
+    ctx.fillRect(x, 8, 1, 6); 
+    ctx.fillText(formatTime(t), x + 4, 3);
+  }
+
+  // Menggambar Gelombang Irama
+  const waveTop = rulerHeight + 10;
+  const waveHeight = height - waveTop - 5;
+  const mid = waveTop + (waveHeight / 2);
+  
+  for (let i = 0; i < state.peaks.length; i++) {
+    const x = i * state.barWidth;
+    const timeAtBar = (x / width) * state.duration;
+    const pk = state.peaks[i];
+    const yMin = mid + (pk.min * waveHeight / 2); 
+    const yMax = mid + (pk.max * waveHeight / 2);
+    const h = Math.max(2, yMax - yMin);
+    
+    // Mewarnai Area Potongan Terang, Sisanya Redup
+    if (timeAtBar >= state.startTime && timeAtBar <= state.endTime) {
+        ctx.fillStyle = '#007AFF'; // Biru terang untuk area yang dipilih
+    } else {
+        ctx.fillStyle = '#D1D1D6'; // Abu-abu redup untuk area terbuang
+    }
+    ctx.fillRect(x, yMin, state.barWidth - 1, h);
   }
 }
 
@@ -396,7 +466,7 @@ function onDrag(e) {
     state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time;
   } else {
     if (time <= state.startTime) time = state.startTime + 0.1; if (time > state.duration) time = state.duration;
-    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time;
+    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time - 0.5; // Mundur dikit saat digeser akhir
   }
   updateWaveformUI();
 }
@@ -406,36 +476,100 @@ handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
 handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'));
 handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
 
-// Input Listeners
-startInput.addEventListener('change', () => { let time = parseTime(startInput.value); if (time >= state.endTime) time = state.endTime - 0.1; if (time < 0) time = 0; state.startTime = time; startInput.value = formatTime(time); updateWaveformUI(); audioEl.currentTime = time; });
-endInput.addEventListener('change', () => { let time = parseTime(endInput.value); if (time <= state.startTime) time = state.startTime + 0.1; if (time > state.duration) time = state.duration; state.endTime = time; endInput.value = formatTime(time); updateWaveformUI(); audioEl.currentTime = time; });
 
-// Custom Slider Sheet
-document.getElementById('startSliderBtn').addEventListener('click', () => openSliderSheet('start'));
-document.getElementById('endSliderBtn').addEventListener('click', () => openSliderSheet('end'));
-sheetDoneBtn.addEventListener('click', () => sliderSheet.classList.remove('show'));
-sliderSheet.addEventListener('click', (e) => { if (e.target === sliderSheet) sliderSheet.classList.remove('show'); });
-
-function openSliderSheet(target) {
-  activeTarget = target; const maxSec = Math.floor(state.duration); const maxMin = Math.floor(maxSec / 60);
-  let currentTime = target === 'start' ? state.startTime : state.endTime;
-  let currentMin = Math.floor(currentTime / 60); let currentSec = Math.floor(currentTime % 60);
-  sheetTitle.textContent = target === 'start' ? 'Set Waktu Mulai' : 'Set Waktu Selesai';
-  minSlider.max = maxMin; minSlider.value = currentMin;
-  if (currentMin === maxMin) secSlider.max = maxSec % 60; else secSlider.max = 59; secSlider.value = currentSec;
-  sliderSheet.classList.add('show');
-}
-minSlider.addEventListener('input', () => { const maxSec = Math.floor(state.duration); const maxMin = Math.floor(maxSec / 60); if (parseInt(minSlider.value) === maxMin) secSlider.max = maxSec % 60; else secSlider.max = 59; if (parseInt(secSlider.value) > parseInt(secSlider.max)) secSlider.value = secSlider.max; updateFromSliders(); });
-secSlider.addEventListener('input', updateFromSliders);
-
-function updateFromSliders() {
-  const min = parseInt(minSlider.value); const sec = parseInt(secSlider.value); let time = min * 60 + sec;
-  if (activeTarget === 'start') { if (time >= state.endTime) time = state.endTime - 0.1; state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time; } 
-  else { if (time <= state.startTime) time = state.startTime + 0.1; state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time; }
-  updateWaveformUI();
+// === SISTEM BOTTOM SHEET BARU (WHEEL & KETIK) ===
+function populateWheels() {
+  const maxMin = Math.floor(state.duration / 60);
+  wheelMin.innerHTML = '';
+  wheelSec.innerHTML = '';
+  
+  for(let i = 0; i <= maxMin; i++) {
+     const div = document.createElement('div');
+     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     wheelMin.appendChild(div);
+  }
+  for(let i = 0; i <= 59; i++) {
+     const div = document.createElement('div');
+     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     wheelSec.appendChild(div);
+  }
 }
 
-// Cut and MP3 Encoding
+function syncWheelsToInputs() {
+  const minVal = Math.round(wheelMin.scrollTop / 50);
+  const secVal = Math.round(wheelSec.scrollTop / 50);
+  sheetMin.value = minVal;
+  sheetSec.value = secVal;
+}
+
+function syncInputsToWheels() {
+  let m = parseInt(sheetMin.value) || 0;
+  let s = parseInt(sheetSec.value) || 0;
+  const maxMin = Math.floor(state.duration / 60);
+  if(m > maxMin) m = maxMin;
+  if(s > 59) s = 59;
+  
+  wheelMin.scrollTo({ top: m * 50, behavior: 'smooth' });
+  wheelSec.scrollTo({ top: s * 50, behavior: 'smooth' });
+}
+
+wheelMin.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
+wheelSec.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
+
+sheetMin.addEventListener('input', syncInputsToWheels);
+sheetSec.addEventListener('input', syncInputsToWheels);
+
+// Saat kotak utama ditekan, buka sheet
+function openTimeSheet(target) {
+  activeTarget = target;
+  sheetTitle.textContent = target === 'start' ? 'Atur Waktu Mulai' : 'Atur Waktu Selesai';
+  populateWheels();
+  
+  let cur = target === 'start' ? state.startTime : state.endTime;
+  let m = Math.floor(cur / 60);
+  let s = Math.floor(cur % 60);
+  
+  sheetMin.value = m;
+  sheetSec.value = s;
+  
+  timeSheet.classList.add('show');
+  
+  setTimeout(() => {
+    wheelMin.scrollTop = m * 50;
+    wheelSec.scrollTop = s * 50;
+  }, 50);
+}
+
+startInput.addEventListener('click', () => openTimeSheet('start'));
+endInput.addEventListener('click', () => openTimeSheet('end'));
+timeSheet.addEventListener('click', (e) => { if (e.target === timeSheet) timeSheet.classList.remove('show'); });
+
+// Tombol Simpan Waktu di dalam Sheet
+sheetDoneBtn.addEventListener('click', () => {
+   let m = parseInt(sheetMin.value) || 0;
+   let s = parseInt(sheetSec.value) || 0;
+   let time = m * 60 + s;
+   
+   if(time > state.duration) time = state.duration;
+   
+   if(activeTarget === 'start') {
+     if(time >= state.endTime) time = Math.max(0, state.endTime - 1);
+     state.startTime = time;
+     startInput.value = formatTime(time);
+     audioEl.currentTime = time;
+   } else {
+     if(time <= state.startTime) time = Math.min(state.duration, state.startTime + 1);
+     state.endTime = time;
+     endInput.value = formatTime(time);
+     audioEl.currentTime = state.startTime;
+   }
+   
+   updateWaveformUI();
+   timeSheet.classList.remove('show');
+});
+
+
+// MP3 Encoding
 function floatTo16(float32Array) { const int16Array = new Int16Array(float32Array.length); for (let i = 0; i < float32Array.length; i++) { const s = Math.max(-1, Math.min(1, float32Array[i])); int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF; } return int16Array; }
 function encodeMP3(buffer) {
   return new Promise((resolve, reject) => {
@@ -456,10 +590,9 @@ function encodeMP3(buffer) {
 }
 
 cutBtn.addEventListener('click', async () => {
-  const start = parseTime(startInput.value); const end = parseTime(endInput.value);
+  const start = state.startTime; const end = state.endTime;
   if (end <= start) { showToast('Waktu selesai harus lebih besar'); return; }
   if (end > state.duration + 0.01) { showToast('Waktu selesai melebihi durasi'); return; }
-  if (start < 0) { showToast('Waktu mulai tidak valid'); return; }
   if (typeof lamejs === 'undefined') { showToast('Library MP3 belum siap, tunggu sebentar'); return; }
 
   try {
@@ -481,14 +614,14 @@ cutBtn.addEventListener('click', async () => {
     const source = ctx.createBufferSource(); source.buffer = sliced; source.connect(ctx.destination); source.start(0);
     const rendered = await ctx.startRendering();
 
-    showToast('Encoding MP3...'); await new Promise(r => setTimeout(r, 50));
+    showToast('Menyimpan file MP3...'); await new Promise(r => setTimeout(r, 50));
     const mp3Blob = await encodeMP3(rendered);
-    const fileName = state.fileName + '_cut.mp3';
+    const finalName = state.fileName + '_cut.mp3';
     
-    await saveOutputToDB(fileName, mp3Blob);
+    await saveOutputToDB(finalName, mp3Blob);
     
     const url = URL.createObjectURL(mp3Blob);
-    const a = document.createElement('a'); a.href = url; a.download = fileName;
+    const a = document.createElement('a'); a.href = url; a.download = finalName;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     showToast('Audio berhasil dipotong & disimpan ✓');
@@ -544,7 +677,6 @@ async function loadOutputs() {
   }
 }
 
-// Init
 openDB().then(() => { loadOutputs(); });
 window.addEventListener('resize', () => { if (state.peaks.length > 0) { generatePeaks(state.audioBuffer); } });
 </script>
