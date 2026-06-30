@@ -236,7 +236,7 @@ audio { display: none; }
   </div>
 </div>
 
-<audio id="audio" preload="auto"></audio>
+<audio id="audio"></audio>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -314,10 +314,12 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// File Upload Handlers
+// File Upload Handlers (Standard & Drag and Drop)
 fileInput.addEventListener('change', async (e) => { 
   const file = e.target.files[0]; 
-  if (file) await loadFile(file);
+  if (file) {
+    await loadFile(file);
+  }
 });
 
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -328,16 +330,18 @@ fileInput.addEventListener('change', async (e) => {
 });
 dropzone.addEventListener('drop', async (e) => {
   const file = e.dataTransfer.files[0];
-  if (file) await loadFile(file);
+  if (file) {
+    await loadFile(file);
+  }
 });
 
-// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI FULL (BEBAS BUG UPLOAD)
+// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI: 
+// Langsung decode AudioBuffer untuk menghindari loadedmetadata hang pada MP3
 async function loadFile(file) {
   try {
     showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
     
-    // 1. Inisialisasi AudioContext SESEGERA MUNGKIN
     if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -345,20 +349,26 @@ async function loadFile(file) {
         await state.audioCtx.resume();
     }
 
-    const objectURL = URL.createObjectURL(file);
-    
-    // 2. PERBAIKAN BUG RACE CONDITION: Listener dipasang sebelum `src` dimasukkan
-    await new Promise((resolve, reject) => { 
-      audioEl.addEventListener('loadedmetadata', resolve, { once: true });
-      audioEl.addEventListener('error', () => reject(new Error("Format audio tidak didukung browser")), { once: true });
-      
-      audioEl.src = objectURL; 
-      
-      // Jika memuat super cepat (dari cache memori), antisipasi kondisi jika loadedmetadata terlewat
-      if (audioEl.readyState >= 1) resolve();
+    // 1. Langsung baca file sebagai ArrayBuffer
+    const arrayBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject(new Error("Gagal membaca file"));
+        reader.readAsArrayBuffer(file);
+    });
+
+    // 2. Decode audio data terlebih dahulu
+    state.audioBuffer = await new Promise((resolve, reject) => {
+        state.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
     });
     
-    state.duration = audioEl.duration;
+    // 3. Set audio src
+    const objectURL = URL.createObjectURL(file);
+    audioEl.src = objectURL;
+
+    // 4. Ambil durasi langsung dari AudioBuffer (Akurat 100% untuk MP3)
+    state.duration = state.audioBuffer.duration;
+    
     fileNameEl.textContent = file.name;
     totalTimeEl.textContent = formatTime(state.duration);
     state.startTime = 0; 
@@ -368,38 +378,20 @@ async function loadFile(file) {
     progressFill.style.width = '0%'; 
     progressThumb.style.left = '0%';
     
-    // 3. Gunakan cara modern membaca array buffer (didukung semua browser dari 2018+)
-    const arrayBuffer = await file.arrayBuffer();
-
-    // 4. PERBAIKAN BUG SAFARI: Penanganan DecodeAudioData yang menggabungkan Promise & Callback 
-    state.audioBuffer = await new Promise((resolve, reject) => {
-        const decodeResult = state.audioCtx.decodeAudioData(
-            arrayBuffer, 
-            (decodedData) => resolve(decodedData), 
-            (error) => reject(error)
-        );
-        // Tangkap promise jika didukung browser modern (menghindari error silent di Console)
-        if (decodeResult) {
-            decodeResult.catch(reject);
-        }
-    });
-    
-    // Tampilkan panel player
     uploadCard.classList.add('hidden'); 
     playerCard.classList.remove('hidden');
     cutBtn.classList.remove('hidden'); 
     resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    // 5. PERBAIKAN BUG KANVAS: Beri waktu DOM (UI) merender agar Canvas punya 'width' sebelum digambar
-    setTimeout(() => { 
+    requestAnimationFrame(() => { 
       generatePeaks(state.audioBuffer); 
-    }, 100);
+    });
     
     showToast('Audio siap dipotong');
   } catch (err) { 
-    showToast('Gagal memuat audio: Coba file lain'); 
-    console.error("Detail Error:", err); 
+    showToast('Gagal memuat audio: ' + err.message); 
+    console.error(err); 
   }
 }
 
@@ -438,7 +430,7 @@ function setupCanvas() {
 }
 function generatePeaks(buffer) {
   const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
-  if(width === 0) return; // Jika width 0, tunggu render DOM selesai
+  if(width === 0) return;
   
   const data = buffer.getChannelData(0); 
   const barWidth = 3; 
