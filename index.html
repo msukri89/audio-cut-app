@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Audio Cut">
 <title>Audio Cut</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgYmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAuNSIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -277,7 +277,6 @@ const sheetDoneBtn = document.getElementById('sheetDoneBtn');
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => toast.classList.remove('show'), 2400); }
 function formatTime(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
-function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } return 0; }
 
 // IndexedDB Setup
 function openDB() { return new Promise((resolve) => { const req = indexedDB.open('AudioCutDB', 1); req.onupgradeneeded = (e) => { const d = e.target.result; if (!d.objectStoreNames.contains('outputs')) d.createObjectStore('outputs', { keyPath: 'id', autoIncrement: true }); }; req.onsuccess = (e) => { db = e.target.result; resolve(); }; }); }
@@ -323,10 +322,7 @@ async function loadFile(file) {
     cutBtn.classList.remove('hidden'); resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    setTimeout(() => {
-        generatePeaks(state.audioBuffer);
-    }, 50);
-
+    setTimeout(() => { generatePeaks(state.audioBuffer); }, 50);
     showToast('Audio siap dipotong');
   } catch (err) { showToast('Gagal memuat audio'); console.error(err); }
 }
@@ -348,12 +344,10 @@ audioEl.addEventListener('ended', () => { playIcon.style.display = 'block'; paus
 
 audioEl.addEventListener('timeupdate', () => {
   const cur = audioEl.currentTime;
-  
   if (cur >= state.endTime && !audioEl.paused) {
     audioEl.pause();
     audioEl.currentTime = state.startTime;
   }
-  
   currentTimeEl.textContent = formatTime(cur);
   const pct = state.duration ? (cur / state.duration) * 100 : 0;
   progressFill.style.width = pct + '%'; progressThumb.style.left = pct + '%';
@@ -376,7 +370,6 @@ function generatePeaks(buffer) {
   if(waveformCanvas.clientWidth === 0) return;
   const data = buffer.getChannelData(0); 
   const width = waveformCanvas.clientWidth;
-  
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
   const samplesPerBar = Math.floor(data.length / numBars);
@@ -406,8 +399,6 @@ function updateWaveformUI() {
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
   ctx.clearRect(0, 0, width, height); 
-  
-  // Menggambar Gelombang Irama Simetris Tanpa Penggaris Atas
   const padding = 10;
   const waveTop = padding;
   const waveHeight = height - (padding * 2);
@@ -431,7 +422,7 @@ function drawWaveform() {
 }
 
 // Waveform Handles Dragging
-function startDrag(e, handle) { e.preventDefault(); draggingHandle = handle; document.addEventListener('touchmove', onDrag); document.addEventListener('touchend', endDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag); }
+function startDrag(e, handle) { e.preventDefault(); draggingHandle = handle; document.addEventListener('touchmove', onDrag, {passive: false}); document.addEventListener('touchend', endDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag); }
 function onDrag(e) {
   if (!draggingHandle) return; e.preventDefault();
   const rect = waveformContainer.getBoundingClientRect();
@@ -448,49 +439,37 @@ function onDrag(e) {
   updateWaveformUI();
 }
 function endDrag() { draggingHandle = null; document.removeEventListener('touchmove', onDrag); document.removeEventListener('touchend', endDrag); document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', endDrag); }
-handleStart.addEventListener('touchstart', (e) => startDrag(e, 'start'));
+handleStart.addEventListener('touchstart', (e) => startDrag(e, 'start'), {passive: false});
 handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
-handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'));
+handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'), {passive: false});
 handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
 
 function populateWheels() {
   const maxMin = Math.floor(state.duration / 60);
-  wheelMin.innerHTML = '';
-  wheelSec.innerHTML = '';
-  
+  wheelMin.innerHTML = ''; wheelSec.innerHTML = '';
   for(let i = 0; i <= maxMin; i++) {
-     const div = document.createElement('div');
-     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     const div = document.createElement('div'); div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
      wheelMin.appendChild(div);
   }
   for(let i = 0; i <= 59; i++) {
-     const div = document.createElement('div');
-     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     const div = document.createElement('div'); div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
      wheelSec.appendChild(div);
   }
 }
 
 function syncWheelsToInputs() {
-  const minVal = Math.round(wheelMin.scrollTop / 50);
-  const secVal = Math.round(wheelSec.scrollTop / 50);
-  sheetMin.value = minVal;
-  sheetSec.value = secVal;
+  const minVal = Math.round(wheelMin.scrollTop / 50); const secVal = Math.round(wheelSec.scrollTop / 50);
+  sheetMin.value = minVal; sheetSec.value = secVal;
 }
-
 function syncInputsToWheels() {
-  let m = parseInt(sheetMin.value) || 0;
-  let s = parseInt(sheetSec.value) || 0;
+  let m = parseInt(sheetMin.value) || 0; let s = parseInt(sheetSec.value) || 0;
   const maxMin = Math.floor(state.duration / 60);
-  if(m > maxMin) m = maxMin;
-  if(s > 59) s = 59;
-  
-  wheelMin.scrollTo({ top: m * 50, behavior: 'smooth' });
-  wheelSec.scrollTo({ top: s * 50, behavior: 'smooth' });
+  if(m > maxMin) m = maxMin; if(s > 59) s = 59;
+  wheelMin.scrollTo({ top: m * 50, behavior: 'smooth' }); wheelSec.scrollTo({ top: s * 50, behavior: 'smooth' });
 }
 
 wheelMin.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
 wheelSec.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
-
 sheetMin.addEventListener('input', syncInputsToWheels);
 sheetSec.addEventListener('input', syncInputsToWheels);
 
@@ -498,20 +477,11 @@ function openTimeSheet(target) {
   activeTarget = target;
   sheetTitle.textContent = target === 'start' ? 'Atur Waktu Mulai' : 'Atur Waktu Selesai';
   populateWheels();
-  
   let cur = target === 'start' ? state.startTime : state.endTime;
-  let m = Math.floor(cur / 60);
-  let s = Math.floor(cur % 60);
-  
-  sheetMin.value = m;
-  sheetSec.value = s;
-  
+  let m = Math.floor(cur / 60); let s = Math.floor(cur % 60);
+  sheetMin.value = m; sheetSec.value = s;
   timeSheet.classList.add('show');
-  
-  setTimeout(() => {
-    wheelMin.scrollTop = m * 50;
-    wheelSec.scrollTop = s * 50;
-  }, 50);
+  setTimeout(() => { wheelMin.scrollTop = m * 50; wheelSec.scrollTop = s * 50; }, 50);
 }
 
 startInput.addEventListener('click', () => openTimeSheet('start'));
@@ -519,45 +489,92 @@ endInput.addEventListener('click', () => openTimeSheet('end'));
 timeSheet.addEventListener('click', (e) => { if (e.target === timeSheet) timeSheet.classList.remove('show'); });
 
 sheetDoneBtn.addEventListener('click', () => {
-   let m = parseInt(sheetMin.value) || 0;
-   let s = parseInt(sheetSec.value) || 0;
+   let m = parseInt(sheetMin.value) || 0; let s = parseInt(sheetSec.value) || 0;
    let time = m * 60 + s;
-   
    if(time > state.duration) time = state.duration;
-   
    if(activeTarget === 'start') {
      if(time >= state.endTime) time = Math.max(0, state.endTime - 1);
-     state.startTime = time;
-     startInput.value = formatTime(time);
-     audioEl.currentTime = time;
+     state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time;
    } else {
      if(time <= state.startTime) time = Math.min(state.duration, state.startTime + 1);
-     state.endTime = time;
-     endInput.value = formatTime(time);
-     audioEl.currentTime = state.startTime;
+     state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = state.startTime;
    }
-   
    updateWaveformUI();
    timeSheet.classList.remove('show');
 });
 
-// MP3 Encoding
-function floatTo16(float32Array) { const int16Array = new Int16Array(float32Array.length); for (let i = 0; i < float32Array.length; i++) { const s = Math.max(-1, Math.min(1, float32Array[i])); int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF; } return int16Array; }
-function encodeMP3(buffer) {
+// FUNGSI OPTIMASI UTAMA: Encoding MP3 Menggunakan Web Worker Latar Belakang
+function encodeMP3WithWorker(buffer) {
   return new Promise((resolve, reject) => {
-    try {
-      const channels = buffer.numberOfChannels; const sr = buffer.sampleRate; const kbps = 128;
-      const mp3encoder = new lamejs.Mp3Encoder(channels, sr, kbps);
-      const samplesL = floatTo16(buffer.getChannelData(0));
-      const samplesR = channels > 1 ? floatTo16(buffer.getChannelData(1)) : samplesL;
-      const blockSize = 1152; const mp3Data = [];
-      for (let i = 0; i < samplesL.length; i += blockSize) {
-        const left = samplesL.subarray(i, i + blockSize); const right = channels > 1 ? samplesR.subarray(i, i + blockSize) : null;
-        const mp3buf = mp3encoder.encodeBuffer(left, right); if (mp3buf.length > 0) mp3Data.push(mp3buf);
+    const channels = buffer.numberOfChannels;
+    const sr = buffer.sampleRate;
+    const leftData = buffer.getChannelData(0);
+    const rightData = channels > 1 ? buffer.getChannelData(1) : new Float32Array(leftData.length);
+
+    // Kode Worker yang diringkas menjadi Blob URL (Tanpa perlu membuat file terpisah)
+    const workerCode = `
+      importScripts('https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js');
+
+      function floatTo16(float32Array) {
+        const len = float32Array.length;
+        const int16Array = new Int16Array(len);
+        for (let i = 0; i < len; i++) {
+          let s = float32Array[i];
+          if (s > 1) s = 1;
+          else if (s < -1) s = -1;
+          int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        return int16Array;
       }
-      const end = mp3encoder.flush(); if (end.length > 0) mp3Data.push(end);
-      resolve(new Blob(mp3Data, { type: 'audio/mp3' }));
-    } catch (err) { reject(err); }
+
+      self.onmessage = function(e) {
+        const { left, right, channels, sr } = e.data;
+        try {
+          const mp3encoder = new lamejs.Mp3Encoder(channels, sr, 128);
+          const samplesL = floatTo16(left);
+          const samplesR = channels > 1 ? floatTo16(right) : samplesL;
+          const blockSize = 1152;
+          const mp3Data = [];
+
+          for (let i = 0; i < samplesL.length; i += blockSize) {
+            const leftBuf = samplesL.subarray(i, i + blockSize);
+            const rightBuf = channels > 1 ? samplesR.subarray(i, i + blockSize) : null;
+            const mp3buf = mp3encoder.encodeBuffer(leftBuf, rightBuf);
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+          }
+          
+          const end = mp3encoder.flush();
+          if (end.length > 0) mp3Data.push(end);
+
+          self.postMessage({ success: true, mp3Data: mp3Data });
+        } catch(err) {
+          self.postMessage({ success: false, error: err.message });
+        }
+      };
+    `;
+
+    const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(workerBlob);
+    const worker = new Worker(workerUrl);
+
+    worker.onmessage = (e) => {
+      URL.revokeObjectURL(workerUrl);
+      worker.terminate();
+      if (e.data.success) {
+        resolve(new Blob(e.data.mp3Data, { type: 'audio/mp3' }));
+      } else {
+        reject(new Error(e.data.error));
+      }
+    };
+
+    worker.onerror = (err) => {
+      URL.revokeObjectURL(workerUrl);
+      worker.terminate();
+      reject(err);
+    };
+
+    // Mengirim data audio biner ke thread latar belakang worker
+    worker.postMessage({ left: leftData, right: rightData, channels, sr });
   });
 }
 
@@ -568,8 +585,10 @@ cutBtn.addEventListener('click', async () => {
   if (typeof lamejs === 'undefined') { showToast('Library MP3 belum siap, tunggu sebentar'); return; }
 
   try {
-    cutBtn.disabled = true; cutBtn.textContent = 'Memproses...'; showToast('Memotong & encoding MP3...');
-    await new Promise(r => setTimeout(r, 50));
+    cutBtn.disabled = true; 
+    cutBtn.textContent = 'Memproses...'; 
+    showToast('Memotong audio...');
+    await new Promise(r => setTimeout(r, 100));
 
     const sr = state.audioBuffer.sampleRate;
     const startSample = Math.max(0, Math.floor(start * sr));
@@ -586,8 +605,11 @@ cutBtn.addEventListener('click', async () => {
     const source = ctx.createBufferSource(); source.buffer = sliced; source.connect(ctx.destination); source.start(0);
     const rendered = await ctx.startRendering();
 
-    showToast('Menyimpan file MP3...'); await new Promise(r => setTimeout(r, 50));
-    const mp3Blob = await encodeMP3(rendered);
+    showToast('Mengompres ke MP3 di latar belakang...'); 
+    await new Promise(r => setTimeout(r, 100));
+    
+    // Mengeksekusi kompresi super cepat dengan Worker
+    const mp3Blob = await encodeMP3WithWorker(rendered);
     const finalName = state.fileName + '_cut.mp3';
     
     await saveOutputToDB(finalName, mp3Blob);
@@ -597,8 +619,13 @@ cutBtn.addEventListener('click', async () => {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
     showToast('Audio berhasil dipotong & disimpan ✓');
-  } catch (err) { showToast('Gagal memproses audio'); console.error(err); }
-  finally { cutBtn.disabled = false; cutBtn.textContent = 'Potong & Simpan Audio'; }
+  } catch (err) { 
+    showToast('Gagal memproses audio'); 
+    console.error(err); 
+  } finally { 
+    cutBtn.disabled = false; 
+    cutBtn.textContent = 'Potong & Simpan Audio'; 
+  }
 });
 
 resetBtn.addEventListener('click', () => {
