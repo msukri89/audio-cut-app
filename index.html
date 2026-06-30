@@ -335,17 +335,27 @@ dropzone.addEventListener('drop', async (e) => {
   }
 });
 
+// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI (TANGGUH UNTUK SEMUA BROWSER)
 async function loadFile(file) {
   try {
     showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
     
+    // 1. Inisialisasi AudioContext harus SESEGERA MUNGKIN (tanpa await sebelumnya) agar tidak diblokir iOS/Safari
+    if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (state.audioCtx.state === 'suspended') {
+        await state.audioCtx.resume();
+    }
+
     const objectURL = URL.createObjectURL(file);
     audioEl.src = objectURL;
     
-    await new Promise((res, rej) => { 
-      audioEl.onloadedmetadata = res; 
-      audioEl.onerror = () => rej(new Error("Format audio tidak didukung browser")); 
+    // 2. Gunakan EventListener yang lebih handal ketimbang onloadedmetadata biasa
+    await new Promise((resolve, reject) => { 
+      audioEl.addEventListener('loadedmetadata', resolve, { once: true });
+      audioEl.addEventListener('error', () => reject(new Error("Format audio tidak didukung browser")), { once: true });
     });
     
     state.duration = audioEl.duration;
@@ -357,12 +367,19 @@ async function loadFile(file) {
     endInput.value = formatTime(state.duration);
     progressFill.style.width = '0%'; 
     progressThumb.style.left = '0%';
-
-    if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
     
-    const arrayBuffer = await file.arrayBuffer();
-    state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+    // 3. Gunakan FileReader untuk membaca ArrayBuffer (Lebih stabil di browser lama ketimbang file.arrayBuffer())
+    const arrayBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject(new Error("Gagal membaca file"));
+        reader.readAsArrayBuffer(file);
+    });
+
+    // 4. Decode Audio Data dibungkus dengan Promise tapi menggunakan syntax Callback (Wajib untuk Safari versi lama)
+    state.audioBuffer = await new Promise((resolve, reject) => {
+        state.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+    });
     
     uploadCard.classList.add('hidden'); 
     playerCard.classList.remove('hidden');
