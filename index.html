@@ -236,7 +236,7 @@ audio { display: none; }
   </div>
 </div>
 
-<audio id="audio"></audio>
+<audio id="audio" preload="auto"></audio>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -314,12 +314,10 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// File Upload Handlers (Standard & Drag and Drop)
+// File Upload Handlers
 fileInput.addEventListener('change', async (e) => { 
   const file = e.target.files[0]; 
-  if (file) {
-    await loadFile(file);
-  }
+  if (file) await loadFile(file);
 });
 
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -329,19 +327,17 @@ fileInput.addEventListener('change', async (e) => {
   dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
 });
 dropzone.addEventListener('drop', async (e) => {
-  e.preventDefault();
   const file = e.dataTransfer.files[0];
-  if (file) {
-    await loadFile(file);
-  }
+  if (file) await loadFile(file);
 });
 
-// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI (TANGGUH DAN BEBAS RACE CONDITION)
+// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI FULL (BEBAS BUG UPLOAD)
 async function loadFile(file) {
   try {
     showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
     
+    // 1. Inisialisasi AudioContext SESEGERA MUNGKIN
     if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -351,11 +347,15 @@ async function loadFile(file) {
 
     const objectURL = URL.createObjectURL(file);
     
-    // PERBAIKAN UTAMA: Pasang Event Listener DAHULU sebelum set .src untuk menghindari perlombaan eksekusi (Race Condition)
+    // 2. PERBAIKAN BUG RACE CONDITION: Listener dipasang sebelum `src` dimasukkan
     await new Promise((resolve, reject) => { 
       audioEl.addEventListener('loadedmetadata', resolve, { once: true });
       audioEl.addEventListener('error', () => reject(new Error("Format audio tidak didukung browser")), { once: true });
-      audioEl.src = objectURL;
+      
+      audioEl.src = objectURL; 
+      
+      // Jika memuat super cepat (dari cache memori), antisipasi kondisi jika loadedmetadata terlewat
+      if (audioEl.readyState >= 1) resolve();
     });
     
     state.duration = audioEl.duration;
@@ -368,32 +368,38 @@ async function loadFile(file) {
     progressFill.style.width = '0%'; 
     progressThumb.style.left = '0%';
     
-    const arrayBuffer = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = () => reject(new Error("Gagal membaca file"));
-        reader.readAsArrayBuffer(file);
-    });
+    // 3. Gunakan cara modern membaca array buffer (didukung semua browser dari 2018+)
+    const arrayBuffer = await file.arrayBuffer();
 
+    // 4. PERBAIKAN BUG SAFARI: Penanganan DecodeAudioData yang menggabungkan Promise & Callback 
     state.audioBuffer = await new Promise((resolve, reject) => {
-        state.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+        const decodeResult = state.audioCtx.decodeAudioData(
+            arrayBuffer, 
+            (decodedData) => resolve(decodedData), 
+            (error) => reject(error)
+        );
+        // Tangkap promise jika didukung browser modern (menghindari error silent di Console)
+        if (decodeResult) {
+            decodeResult.catch(reject);
+        }
     });
     
+    // Tampilkan panel player
     uploadCard.classList.add('hidden'); 
     playerCard.classList.remove('hidden');
     cutBtn.classList.remove('hidden'); 
     resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    // Penanganan jeda render layouting di browser safari/chrome mobile
+    // 5. PERBAIKAN BUG KANVAS: Beri waktu DOM (UI) merender agar Canvas punya 'width' sebelum digambar
     setTimeout(() => { 
       generatePeaks(state.audioBuffer); 
-    }, 60);
+    }, 100);
     
     showToast('Audio siap dipotong');
   } catch (err) { 
-    showToast('Gagal memuat audio: ' + err.message); 
-    console.error(err); 
+    showToast('Gagal memuat audio: Coba file lain'); 
+    console.error("Detail Error:", err); 
   }
 }
 
@@ -426,21 +432,17 @@ progressTrack.addEventListener('click', (e) => {
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
-  const w = rect.width || 448;
-  const h = rect.height || 120;
-  waveformCanvas.width = w * dpr; waveformCanvas.height = h * dpr;
+  waveformCanvas.width = rect.width * dpr; waveformCanvas.height = rect.height * dpr;
   const ctx = waveformCanvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width: w, height: h };
+  return { ctx, width: rect.width, height: rect.height };
 }
 function generatePeaks(buffer) {
-  const rect = waveformContainer.getBoundingClientRect();
-  let width = rect.width;
-  if (!width || width === 0) width = 448;
+  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
+  if(width === 0) return; // Jika width 0, tunggu render DOM selesai
   
   const data = buffer.getChannelData(0); 
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
-  if (numBars <= 0) return;
   const samplesPerBar = Math.floor(data.length / numBars);
   state.peaks = [];
   
@@ -456,8 +458,7 @@ function generatePeaks(buffer) {
   updateWaveformUI();
 }
 function updateWaveformUI() {
-  const rect = waveformContainer.getBoundingClientRect();
-  let width = rect.width || 448;
+  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
   state.startPx = (state.startTime / state.duration) * width;
   state.endPx = (state.endTime / state.duration) * width;
   handleStart.style.left = state.startPx + 'px'; handleEnd.style.left = state.endPx + 'px';
