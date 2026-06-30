@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Audio Cut">
 <title>Audio Cut</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJvY2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -280,6 +280,7 @@ const sheetDoneBtn = document.getElementById('sheetDoneBtn');
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => toast.classList.remove('show'), 2400); }
 function formatTime(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
+function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } return 0; }
 
 // IndexedDB Setup
 function openDB() { return new Promise((resolve) => { const req = indexedDB.open('AudioCutDB', 1); req.onupgradeneeded = (e) => { const d = e.target.result; if (!d.objectStoreNames.contains('outputs')) d.createObjectStore('outputs', { keyPath: 'id', autoIncrement: true }); }; req.onsuccess = (e) => { db = e.target.result; resolve(); }; }); }
@@ -366,7 +367,7 @@ progressTrack.addEventListener('click', (e) => {
   audioEl.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * state.duration;
 });
 
-// Waveform (Bersih tanpa ruler angka di atasnya)
+// Waveform Canvas (Bersih tanpa ruler/angka di atasnya)
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
@@ -498,7 +499,7 @@ sheetDoneBtn.addEventListener('click', () => {
    timeSheet.classList.remove('show');
 });
 
-// INSTANT WAV GENERATOR (Menggantikan encoder MP3 yang super lama)
+// INSTANT WAV GENERATOR
 function bufferToWavBlob(buffer) {
   const numOfChan = buffer.numberOfChannels,
         length = buffer.length * numOfChan * 2 + 44,
@@ -511,18 +512,18 @@ function bufferToWavBlob(buffer) {
   function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
 
   setUint32(0x46464952); // "RIFF"
-  setUint32(length - 8); // file length - 8
+  setUint32(length - 8); 
   setUint32(0x45564157); // "WAVE"
   setUint32(0x20746d66); // "fmt " chunk
-  setUint32(16);         // chunk length
-  setUint16(1);          // sample format (raw PCM)
+  setUint32(16);         
+  setUint16(1);          // raw PCM
   setUint16(numOfChan);
   setUint32(buffer.sampleRate);
-  setUint32(buffer.sampleRate * 2 * numOfChan); // byte rate
-  setUint16(numOfChan * 2);                     // block align
-  setUint16(16);                                // bits per sample
-  setUint32(0x61746164);                        // "data" chunk
-  setUint32(length - pos - 4);                  // chunk length
+  setUint32(buffer.sampleRate * 2 * numOfChan); 
+  setUint16(numOfChan * 2);                     
+  setUint16(16);                                
+  setUint32(0x61746164);                        
+  setUint32(length - pos - 4);                  
 
   for (let i = 0; i < numOfChan; i++) channels.push(buffer.getChannelData(i));
 
@@ -552,7 +553,6 @@ cutBtn.addEventListener('click', async () => {
     const length = Math.max(1, endSample - startSample);
     const numCh = Math.min(2, state.audioBuffer.numberOfChannels);
 
-    // Mengiris data audio buffer secara langsung (Hanya hitungan milidetik)
     const ctx = new OfflineAudioContext(numCh, length, sr);
     const sliced = ctx.createBuffer(numCh, length, sr);
     for (let ch = 0; ch < numCh; ch++) {
