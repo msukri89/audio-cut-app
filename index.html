@@ -47,6 +47,9 @@ body {
 .card-header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
 .card-body { padding: 10px 16px 16px; }
 
+/* FIX 1: Hiding input file safely */
+#fileInput { opacity: 0; position: absolute; z-index: -1; width: 1px; height: 1px; }
+
 .dropzone { display: block; border: 2px dashed var(--separator-strong); border-radius: 12px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; background: #FAFAFA; }
 .dropzone:active, .dropzone.dragover { background: #EFEFF4; border-color: var(--accent); }
 .dropzone .icon-wrap { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #E8F0FE; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -145,7 +148,8 @@ audio { display: none; }
           <div class="primary">Pilih atau seret file audio di sini</div>
           <div class="secondary">MP3, WAV, M4A, atau AAC</div>
         </label>
-        <input type="file" id="fileInput" accept="audio/*" style="display:none;">
+        <!-- FIX 1 (Lanjutan): Input file bebas display:none -->
+        <input type="file" id="fileInput" accept="audio/*">
       </div>
     </div>
 
@@ -314,7 +318,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// File Upload Handlers (Standard & Drag and Drop)
+// FIX 2: Reset input value agar user bisa memilih file yang sama berulang kali tanpa macet
+fileInput.addEventListener('click', (e) => { e.target.value = null; });
+
 fileInput.addEventListener('change', async (e) => { 
   const file = e.target.files[0]; 
   if (file) {
@@ -335,11 +341,9 @@ dropzone.addEventListener('drop', async (e) => {
   }
 });
 
-// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI: 
-// Langsung decode AudioBuffer untuk menghindari loadedmetadata hang pada MP3
 async function loadFile(file) {
   try {
-    showToast('Memuat audio…');
+    showToast('Memuat audio...');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
     
     if (!state.audioCtx) {
@@ -349,7 +353,7 @@ async function loadFile(file) {
         await state.audioCtx.resume();
     }
 
-    // 1. Langsung baca file sebagai ArrayBuffer
+    showToast('Membaca data file...');
     const arrayBuffer = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
@@ -357,18 +361,21 @@ async function loadFile(file) {
         reader.readAsArrayBuffer(file);
     });
 
-    // 2. Decode audio data terlebih dahulu
+    showToast('Mendecode audio...');
+    // FIX 3: Gunakan struktur callback explisit pada decodeAudioData untuk memastikan kompatibilitas 100% di semua Safari/Chrome versi lama
     state.audioBuffer = await new Promise((resolve, reject) => {
-        state.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+        state.audioCtx.decodeAudioData(
+            arrayBuffer, 
+            (buffer) => resolve(buffer), 
+            (err) => reject(new Error("File audio rusak atau tidak didukung"))
+        );
     });
     
-    // 3. Set audio src
     const objectURL = URL.createObjectURL(file);
     audioEl.src = objectURL;
+    audioEl.load();
 
-    // 4. Ambil durasi langsung dari AudioBuffer (Akurat 100% untuk MP3)
     state.duration = state.audioBuffer.duration;
-    
     fileNameEl.textContent = file.name;
     totalTimeEl.textContent = formatTime(state.duration);
     state.startTime = 0; 
@@ -390,7 +397,7 @@ async function loadFile(file) {
     
     showToast('Audio siap dipotong');
   } catch (err) { 
-    showToast('Gagal memuat audio: ' + err.message); 
+    showToast('Error: ' + err.message); 
     console.error(err); 
   }
 }
