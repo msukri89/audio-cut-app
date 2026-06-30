@@ -329,19 +329,19 @@ fileInput.addEventListener('change', async (e) => {
   dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
 });
 dropzone.addEventListener('drop', async (e) => {
+  e.preventDefault();
   const file = e.dataTransfer.files[0];
   if (file) {
     await loadFile(file);
   }
 });
 
-// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI (TANGGUH UNTUK SEMUA BROWSER)
+// LOGIKA PEMBACAAN FILE YANG SUDAH DIPERBAIKI (TANGGUH DAN BEBAS RACE CONDITION)
 async function loadFile(file) {
   try {
     showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
     
-    // 1. Inisialisasi AudioContext harus SESEGERA MUNGKIN (tanpa await sebelumnya) agar tidak diblokir iOS/Safari
     if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -350,12 +350,12 @@ async function loadFile(file) {
     }
 
     const objectURL = URL.createObjectURL(file);
-    audioEl.src = objectURL;
     
-    // 2. Gunakan EventListener yang lebih handal ketimbang onloadedmetadata biasa
+    // PERBAIKAN UTAMA: Pasang Event Listener DAHULU sebelum set .src untuk menghindari perlombaan eksekusi (Race Condition)
     await new Promise((resolve, reject) => { 
       audioEl.addEventListener('loadedmetadata', resolve, { once: true });
       audioEl.addEventListener('error', () => reject(new Error("Format audio tidak didukung browser")), { once: true });
+      audioEl.src = objectURL;
     });
     
     state.duration = audioEl.duration;
@@ -368,7 +368,6 @@ async function loadFile(file) {
     progressFill.style.width = '0%'; 
     progressThumb.style.left = '0%';
     
-    // 3. Gunakan FileReader untuk membaca ArrayBuffer (Lebih stabil di browser lama ketimbang file.arrayBuffer())
     const arrayBuffer = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
@@ -376,7 +375,6 @@ async function loadFile(file) {
         reader.readAsArrayBuffer(file);
     });
 
-    // 4. Decode Audio Data dibungkus dengan Promise tapi menggunakan syntax Callback (Wajib untuk Safari versi lama)
     state.audioBuffer = await new Promise((resolve, reject) => {
         state.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
     });
@@ -387,10 +385,10 @@ async function loadFile(file) {
     resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    // Sinkronisasi render DOM sebelum inisialisasi visual ombak suara
-    requestAnimationFrame(() => { 
+    // Penanganan jeda render layouting di browser safari/chrome mobile
+    setTimeout(() => { 
       generatePeaks(state.audioBuffer); 
-    });
+    }, 60);
     
     showToast('Audio siap dipotong');
   } catch (err) { 
@@ -428,17 +426,21 @@ progressTrack.addEventListener('click', (e) => {
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
-  waveformCanvas.width = rect.width * dpr; waveformCanvas.height = rect.height * dpr;
+  const w = rect.width || 448;
+  const h = rect.height || 120;
+  waveformCanvas.width = w * dpr; waveformCanvas.height = h * dpr;
   const ctx = waveformCanvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width: rect.width, height: rect.height };
+  return { ctx, width: w, height: h };
 }
 function generatePeaks(buffer) {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
-  if(width === 0) return;
+  const rect = waveformContainer.getBoundingClientRect();
+  let width = rect.width;
+  if (!width || width === 0) width = 448;
   
   const data = buffer.getChannelData(0); 
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
+  if (numBars <= 0) return;
   const samplesPerBar = Math.floor(data.length / numBars);
   state.peaks = [];
   
@@ -454,7 +456,8 @@ function generatePeaks(buffer) {
   updateWaveformUI();
 }
 function updateWaveformUI() {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
+  const rect = waveformContainer.getBoundingClientRect();
+  let width = rect.width || 448;
   state.startPx = (state.startTime / state.duration) * width;
   state.endPx = (state.endTime / state.duration) * width;
   handleStart.style.left = state.startPx + 'px'; handleEnd.style.left = state.endPx + 'px';
