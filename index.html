@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Audio Cut">
 <title>Audio Cut</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIgnYy9zdmc+">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -47,12 +47,13 @@ body {
 .card-header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
 .card-body { padding: 10px 16px 16px; }
 
+/* Dropzone diperbaiki agar ramah sentuhan tanpa bentrok dengan input file */
 .dropzone { display: block; border: 2px dashed var(--separator-strong); border-radius: 12px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; background: #FAFAFA; }
-.dropzone:active { background: #EFEFF4; transform: scale(0.99); }
-.dropzone .icon-wrap { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #E8F0FE; display: flex; align-items: center; justify-content: center; }
+.dropzone:active { background: #EFEFF4; }
+.dropzone .icon-wrap { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #E8F0FE; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .dropzone .icon-wrap svg { width: 26px; height: 26px; }
-.dropzone .primary { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
-.dropzone .secondary { font-size: 13px; color: var(--text-secondary); }
+.dropzone .primary { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 2px; pointer-events: none; }
+.dropzone .secondary { font-size: 13px; color: var(--text-secondary); pointer-events: none; }
 
 .player { display: flex; flex-direction: column; gap: 14px; }
 .player-info { display: flex; align-items: center; gap: 14px; }
@@ -144,8 +145,8 @@ audio { display: none; }
           </div>
           <div class="primary">Pilih file audio</div>
           <div class="secondary">MP3, WAV, M4A, atau AAC</div>
-          <input type="file" id="fileInput" accept="audio/*" hidden>
         </label>
+        <input type="file" id="fileInput" accept="audio/*" style="display:none;">
       </div>
     </div>
 
@@ -313,33 +314,55 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// File Upload
-fileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) await loadFile(file); });
+// File Upload Handler
+fileInput.addEventListener('change', async (e) => { 
+  const file = e.target.files[0]; 
+  if (file) {
+    await loadFile(file);
+  }
+});
 
 async function loadFile(file) {
   try {
     showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
-    audioEl.src = URL.createObjectURL(file);
-    await new Promise((res, rej) => { audioEl.onloadedmetadata = res; audioEl.onerror = rej; });
+    
+    const objectURL = URL.createObjectURL(file);
+    audioEl.src = objectURL;
+    
+    await new Promise((res, rej) => { 
+      audioEl.onloadedmetadata = res; 
+      audioEl.onerror = () => rej(new Error("Format audio tidak didukung browser")); 
+    });
+    
     state.duration = audioEl.duration;
     fileNameEl.textContent = file.name;
     totalTimeEl.textContent = formatTime(state.duration);
-    state.startTime = 0; state.endTime = state.duration;
-    startInput.value = formatTime(0); endInput.value = formatTime(state.duration);
-    progressFill.style.width = '0%'; progressThumb.style.left = '0%';
+    state.startTime = 0; 
+    state.endTime = state.duration;
+    startInput.value = formatTime(0); 
+    endInput.value = formatTime(state.duration);
+    progressFill.style.width = '0%'; 
+    progressThumb.style.left = '0%';
 
     if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
-    state.audioBuffer = await state.audioCtx.decodeAudioData(await file.arrayBuffer());
     
-    uploadCard.classList.add('hidden'); playerCard.classList.remove('hidden');
-    cutBtn.classList.remove('hidden'); resetBtn.classList.remove('hidden');
+    const arrayBuffer = await file.arrayBuffer();
+    state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+    
+    uploadCard.classList.add('hidden'); 
+    playerCard.classList.remove('hidden');
+    cutBtn.classList.remove('hidden'); 
+    resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
     setTimeout(() => { generatePeaks(state.audioBuffer); }, 50);
     showToast('Audio siap dipotong');
-  } catch (err) { showToast('Gagal memuat audio'); console.error(err); }
+  } catch (err) { 
+    showToast('Gagal memuat audio: ' + err.message); 
+    console.error(err); 
+  }
 }
 
 // Audio Player
@@ -367,7 +390,7 @@ progressTrack.addEventListener('click', (e) => {
   audioEl.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * state.duration;
 });
 
-// Waveform Canvas (Bersih tanpa ruler/angka di atasnya)
+// Waveform Canvas (Bersih tanpa ruler/angka)
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
