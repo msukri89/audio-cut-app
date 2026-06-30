@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Audio Cut">
 <title>Audio Cut</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIkMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -95,10 +95,10 @@ body {
 .output-empty { text-align: center; color: var(--text-secondary); margin-top: 80px; font-size: 15px; }
 .output-item { background: var(--card); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .output-info { flex: 1; min-width: 0; }
-.output-name-wrapper { display: flex; align-items: center; gap: 6px; }
+.output-name-container { display: flex; align-items: center; gap: 6px; }
 .output-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.output-rename-btn { background: none !important; border: none !important; width: auto !important; height: auto !important; padding: 2px; cursor: pointer; display: flex; align-items: center; }
-.output-rename-btn svg { width: 14px; height: 14px; stroke: var(--text-secondary); }
+.output-rename-btn { background: none !important; border: none !important; width: auto !important; height: auto !important; padding: 2px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.output-rename-btn svg { width: 14px; height: 14px; stroke: var(--text-secondary); fill: none; }
 .output-rename-btn:active svg { stroke: var(--accent); }
 .output-meta { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .output-actions { display: flex; gap: 8px; align-items: center; }
@@ -430,36 +430,16 @@ function updateWaveformUI() {
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
   ctx.clearRect(0, 0, width, height); 
-  
-  // Menggambar Penggaris Menit/Detik
-  const rulerHeight = 20;
-  ctx.fillStyle = '#8E8E93';
-  ctx.font = '11px sans-serif';
-  ctx.textBaseline = 'top';
-  
-  // Atur interval tiap 5 detik atau lebih tergantung durasi audio
-  let interval = 5;
-  if(state.duration > 180) interval = 15;
-  if(state.duration > 600) interval = 30;
-  if(state.duration > 1800) interval = 60;
-  
-  for (let t = 0; t <= state.duration; t += interval) {
-    const x = (t / state.duration) * width;
-    ctx.fillRect(x, 8, 1, 6); 
-    ctx.fillText(formatTime(t), x + 4, 3);
-  }
 
-  // Menggambar Gelombang Irama
-  const waveTop = rulerHeight + 10;
-  const waveHeight = height - waveTop - 5;
-  const mid = waveTop + (waveHeight / 2);
+  // Menjaga tampilan clean tanpa penomoran/penggaris waktu di atas grafik
+  const mid = height / 2;
   
   for (let i = 0; i < state.peaks.length; i++) {
     const x = i * state.barWidth;
     const timeAtBar = (x / width) * state.duration;
     const pk = state.peaks[i];
-    const yMin = mid + (pk.min * waveHeight / 2); 
-    const yMax = mid + (pk.max * waveHeight / 2);
+    const yMin = mid + (pk.min * height / 2); 
+    const yMax = mid + (pk.max * height / 2);
     const h = Math.max(2, yMax - yMin);
     
     // Mewarnai Area Potongan Terang, Sisanya Redup
@@ -496,7 +476,7 @@ handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'));
 handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
 
 
-// === SISTEM BOTTOM SHEET BARU (WHEEL & KETIK) ===
+// === SISTEM BOTTOM SHEET (WHEEL & KETIK) ===
 function populateWheels() {
   const maxMin = Math.floor(state.duration / 60);
   wheelMin.innerHTML = '';
@@ -671,7 +651,7 @@ async function loadOutputs() {
         <svg class="pause-ic" viewBox="0 0 24 24" fill="white" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
       </button>
       <div class="output-info">
-        <div class="output-name-wrapper">
+        <div class="output-name-container">
           <div class="output-name">${item.name}</div>
           <button class="output-rename-btn" title="Ubah Nama">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -702,21 +682,20 @@ async function loadOutputs() {
     renameBtn.addEventListener('click', async () => {
       const currentName = item.name;
       const newName = prompt('Masukkan nama baru untuk file audio:', currentName);
-      if (newName === null) return; // Pengguna menekan Batal
+      if (newName === null) return;
       const trimmedName = newName.trim();
       if (trimmedName === '') {
         showToast('Nama file tidak boleh kosong');
         return;
       }
       try {
-        // Tambahkan ekstensi .mp3 secara otomatis jika belum ada
         let formattedName = trimmedName;
         if (!formattedName.toLowerCase().endsWith('.mp3')) {
           formattedName += '.mp3';
         }
         await updateOutputName(item.id, formattedName);
-        URL.revokeObjectURL(url); // Bersihkan URL lama
-        await loadOutputs(); // Muat ulang list output
+        URL.revokeObjectURL(url);
+        await loadOutputs();
         showToast('Nama file berhasil diubah ✓');
       } catch (err) {
         showToast('Gagal mengubah nama file');
