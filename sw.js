@@ -1,4 +1,4 @@
-const CACHE_NAME = 'audiocut-v1';
+const CACHE_NAME = 'audiocut-v2';
 const ASSETS = [
   './',
   './index.html',
