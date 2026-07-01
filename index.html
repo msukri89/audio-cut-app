@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Audio Cut">
 <title>Audio Cut</title>
 <link rel="manifest" href="./manifest.json">
-<link class="favicon" rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIgnYy9zdmc+">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwN0FGRiIgcng9IjQ4Ii8+PHBhdGggZD0iTTYwIDEyMFY2MGw3Mi0xNnY2OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNTYiIGN5PSIxMjAiIHI9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjExMiIgcj0iMTYiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -24,6 +24,7 @@ html, body { height: 100%; }
   --separator: #E5E5EA;
   --separator-strong: #C6C6C8;
   --danger: #FF3B30;
+  --warning: #FF9500;
   --radius: 14px;
 }
 body {
@@ -47,14 +48,12 @@ body {
 .card-header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
 .card-body { padding: 10px 16px 16px; }
 
-#fileInput { opacity: 0; position: absolute; z-index: -1; width: 1px; height: 1px; }
-
 .dropzone { display: block; border: 2px dashed var(--separator-strong); border-radius: 12px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; background: #FAFAFA; }
-.dropzone:active, .dropzone.dragover { background: #EFEFF4; border-color: var(--accent); }
-.dropzone .icon-wrap { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #E8F0FE; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.dropzone:active { background: #EFEFF4; transform: scale(0.99); }
+.dropzone .icon-wrap { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #E8F0FE; display: flex; align-items: center; justify-content: center; }
 .dropzone .icon-wrap svg { width: 26px; height: 26px; }
-.dropzone .primary { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 2px; pointer-events: none; }
-.dropzone .secondary { font-size: 13px; color: var(--text-secondary); pointer-events: none; }
+.dropzone .primary { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+.dropzone .secondary { font-size: 13px; color: var(--text-secondary); }
 
 .player { display: flex; flex-direction: column; gap: 14px; }
 .player-info { display: flex; align-items: center; gap: 14px; }
@@ -96,12 +95,8 @@ body {
 .output-list { display: flex; flex-direction: column; gap: 12px; }
 .output-empty { text-align: center; color: var(--text-secondary); margin-top: 80px; font-size: 15px; }
 .output-item { background: var(--card); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.output-info { flex: 1; min-width: 0; }
-.output-name-container { display: flex; align-items: center; gap: 6px; }
+.output-info { flex: 1; min-width: 0; overflow: hidden; }
 .output-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.output-rename-btn { background: none !important; border: none !important; width: auto !important; height: auto !important; padding: 2px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.output-rename-btn svg { width: 14px; height: 14px; stroke: var(--text-secondary); fill: none; }
-.output-rename-btn:active svg { stroke: var(--accent); }
 .output-meta { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .output-actions { display: flex; gap: 8px; align-items: center; }
 .output-actions button { background: #F0F0F5; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -144,10 +139,10 @@ audio { display: none; }
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           </div>
-          <div class="primary">Pilih atau seret file audio di sini</div>
-          <div class="secondary">MP3, WAV, M4A, atau AAC</div>
+          <div class="primary">Pilih file audio</div>
+          <div class="secondary">Pilih file untuk dipotong cepat</div>
+          <input type="file" id="fileInput" accept="audio/*" hidden>
         </label>
-        <input type="file" id="fileInput" accept="audio/*">
       </div>
     </div>
 
@@ -164,7 +159,7 @@ audio { display: none; }
               <svg id="pauseIcon" viewBox="0 0 24 24" fill="white" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             </button>
             <div class="player-meta">
-              <div class="name" id="fileName">audio.mp3</div>
+              <div class="name" id="fileName">audio.wav</div>
               <div class="time"><span id="currentTime">0:00</span> / <span id="totalTime">0:00</span></div>
             </div>
           </div>
@@ -249,7 +244,6 @@ let activeTarget = null;
 let wheelScrollTimeout;
 
 const fileInput = document.getElementById('fileInput');
-const dropzone = document.getElementById('dropzone');
 const uploadCard = document.getElementById('uploadCard');
 const playerCard = document.getElementById('playerCard');
 const audioEl = document.getElementById('audio');
@@ -283,20 +277,26 @@ const sheetDoneBtn = document.getElementById('sheetDoneBtn');
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => toast.classList.remove('show'), 2400); }
 function formatTime(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
+function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } return 0; }
 
 // IndexedDB Setup
 function openDB() { return new Promise((resolve) => { const req = indexedDB.open('AudioCutDB', 1); req.onupgradeneeded = (e) => { const d = e.target.result; if (!d.objectStoreNames.contains('outputs')) d.createObjectStore('outputs', { keyPath: 'id', autoIncrement: true }); }; req.onsuccess = (e) => { db = e.target.result; resolve(); }; }); }
 async function saveOutputToDB(name, blob) { return new Promise((resolve) => { const tx = db.transaction('outputs', 'readwrite'); tx.objectStore('outputs').add({ name, blob, date: Date.now() }).onsuccess = (e) => resolve(e.target.result); }); }
 async function getOutputs() { return new Promise((resolve) => { const tx = db.transaction('outputs', 'readonly'); tx.objectStore('outputs').getAll().onsuccess = (e) => resolve(e.target.result); }); }
 async function deleteOutput(id) { return new Promise((resolve) => { const tx = db.transaction('outputs', 'readwrite'); tx.objectStore('outputs').delete(id).onsuccess = () => resolve(); }); }
+
+// Update Nama File DB
 async function updateOutputName(id, newName) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const tx = db.transaction('outputs', 'readwrite');
     const store = tx.objectStore('outputs');
-    store.get(id).onsuccess = (e) => {
-      const data = e.target.result;
-      if (data) { data.name = newName; store.put(data).onsuccess = () => resolve(); }
-      else { reject(new Error('Data tidak ditemukan')); }
+    const getReq = store.get(id);
+    getReq.onsuccess = () => {
+      const data = getReq.result;
+      if (data) {
+        data.name = newName;
+        store.put(data).onsuccess = resolve;
+      } else { resolve(); }
     };
   });
 }
@@ -315,108 +315,48 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// MEMAKSA AUDIOCONTEXT UNTUK TERBANGUN DI PERANGKAT MOBILE
-function unlockAudio() {
-    if (!state.audioCtx) {
-        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (state.audioCtx.state === 'suspended') {
-        state.audioCtx.resume();
-    }
-    document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio);
-}
-document.addEventListener('click', unlockAudio);
-document.addEventListener('touchstart', unlockAudio);
-
-fileInput.addEventListener('change', async (e) => { 
-  const file = e.target.files[0]; 
-  if (file) {
-    await loadFile(file);
-  }
-  // Reset dilakukan di sini BUKAN di event 'click' untuk mencegah error pada mobile browser
-  e.target.value = '';
-});
-
-['dragenter', 'dragover'].forEach(eventName => {
-  dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
-});
-['dragleave', 'drop'].forEach(eventName => {
-  dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
-});
-dropzone.addEventListener('drop', async (e) => {
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    await loadFile(file);
-  }
-});
+// File Upload
+fileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) await loadFile(file); });
 
 async function loadFile(file) {
   try {
-    showToast('Memuat audio...');
+    showToast('Memuat audio…');
     state.fileName = file.name.replace(/\.[^.]+$/, '');
-    
-    if (!state.audioCtx) {
-        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (state.audioCtx.state === 'suspended') {
-        await state.audioCtx.resume();
-    }
-
-    showToast('Membaca data file...');
-    const arrayBuffer = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = () => reject(new Error("Gagal membaca file"));
-        reader.readAsArrayBuffer(file);
-    });
-
-    showToast('Mendecode audio...');
-    state.audioBuffer = await new Promise((resolve, reject) => {
-        state.audioCtx.decodeAudioData(
-            arrayBuffer, 
-            (buffer) => resolve(buffer), 
-            (err) => reject(new Error("File audio rusak atau tidak didukung"))
-        );
-    });
-    
-    const objectURL = URL.createObjectURL(file);
-    audioEl.src = objectURL;
-    audioEl.load();
-
-    state.duration = state.audioBuffer.duration;
+    audioEl.src = URL.createObjectURL(file);
+    await new Promise((res, rej) => { audioEl.onloadedmetadata = res; audioEl.onerror = rej; });
+    state.duration = audioEl.duration;
     fileNameEl.textContent = file.name;
     totalTimeEl.textContent = formatTime(state.duration);
-    state.startTime = 0; 
-    state.endTime = state.duration;
-    startInput.value = formatTime(0); 
-    endInput.value = formatTime(state.duration);
-    progressFill.style.width = '0%'; 
-    progressThumb.style.left = '0%';
+    state.startTime = 0; state.endTime = state.duration;
+    startInput.value = formatTime(0); endInput.value = formatTime(state.duration);
+    progressFill.style.width = '0%'; progressThumb.style.left = '0%';
+
+    if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
+    state.audioBuffer = await state.audioCtx.decodeAudioData(await file.arrayBuffer());
     
-    uploadCard.classList.add('hidden'); 
-    playerCard.classList.remove('hidden');
-    cutBtn.classList.remove('hidden'); 
-    resetBtn.classList.remove('hidden');
+    uploadCard.classList.add('hidden'); playerCard.classList.remove('hidden');
+    cutBtn.classList.remove('hidden'); resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    requestAnimationFrame(() => { 
-      generatePeaks(state.audioBuffer); 
-    });
-    
+    setTimeout(() => {
+        generatePeaks(state.audioBuffer);
+    }, 50);
+
     showToast('Audio siap dipotong');
-  } catch (err) { 
-    showToast('Error: ' + err.message); 
-    console.error(err); 
-  }
+  } catch (err) { showToast('Gagal memuat audio'); console.error(err); }
 }
 
 // Audio Player
 playBtn.addEventListener('click', () => { 
   if (audioEl.paused) {
-    if (audioEl.currentTime < state.startTime || audioEl.currentTime >= state.endTime) { audioEl.currentTime = state.startTime; }
+    if (audioEl.currentTime < state.startTime || audioEl.currentTime >= state.endTime) {
+      audioEl.currentTime = state.startTime;
+    }
     audioEl.play(); 
-  } else { audioEl.pause(); }
+  } else { 
+    audioEl.pause(); 
+  }
 });
 audioEl.addEventListener('play', () => { playIcon.style.display = 'none'; pauseIcon.style.display = 'block'; });
 audioEl.addEventListener('pause', () => { playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; });
@@ -424,7 +364,12 @@ audioEl.addEventListener('ended', () => { playIcon.style.display = 'block'; paus
 
 audioEl.addEventListener('timeupdate', () => {
   const cur = audioEl.currentTime;
-  if (cur >= state.endTime && !audioEl.paused) { audioEl.pause(); audioEl.currentTime = state.startTime; }
+  
+  if (cur >= state.endTime && !audioEl.paused) {
+    audioEl.pause();
+    audioEl.currentTime = state.startTime;
+  }
+  
   currentTimeEl.textContent = formatTime(cur);
   const pct = state.duration ? (cur / state.duration) * 100 : 0;
   progressFill.style.width = pct + '%'; progressThumb.style.left = pct + '%';
@@ -436,7 +381,6 @@ progressTrack.addEventListener('click', (e) => {
   audioEl.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * state.duration;
 });
 
-// Waveform Canvas
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = waveformCanvas.getBoundingClientRect();
@@ -445,10 +389,10 @@ function setupCanvas() {
   return { ctx, width: rect.width, height: rect.height };
 }
 function generatePeaks(buffer) {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
-  if(width === 0) return;
-  
+  if(waveformCanvas.clientWidth === 0) return;
   const data = buffer.getChannelData(0); 
+  const width = waveformCanvas.clientWidth;
+  
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
   const samplesPerBar = Math.floor(data.length / numBars);
@@ -456,9 +400,12 @@ function generatePeaks(buffer) {
   
   for (let i = 0; i < numBars; i++) {
     let min = 1.0, max = -1.0; 
-    const s = i * samplesPerBar; const e = s + samplesPerBar;
+    const s = i * samplesPerBar; 
+    const e = s + samplesPerBar;
     for (let j = s; j < e; j++) { 
-        const v = data[j]; if (v < min) min = v; if (v > max) max = v; 
+        const v = data[j]; 
+        if (v < min) min = v; 
+        if (v > max) max = v; 
     }
     state.peaks.push({ min, max });
   }
@@ -466,7 +413,7 @@ function generatePeaks(buffer) {
   updateWaveformUI();
 }
 function updateWaveformUI() {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
+  const width = waveformCanvas.clientWidth;
   state.startPx = (state.startTime / state.duration) * width;
   state.endPx = (state.endTime / state.duration) * width;
   handleStart.style.left = state.startPx + 'px'; handleEnd.style.left = state.endPx + 'px';
@@ -474,26 +421,32 @@ function updateWaveformUI() {
 }
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
-  if (width === 0 || height === 0) return;
   ctx.clearRect(0, 0, width, height); 
-  const mid = height / 2;
+  
+  const padding = 10;
+  const waveTop = padding;
+  const waveHeight = height - (padding * 2);
+  const mid = waveTop + (waveHeight / 2);
   
   for (let i = 0; i < state.peaks.length; i++) {
     const x = i * state.barWidth;
     const timeAtBar = (x / width) * state.duration;
     const pk = state.peaks[i];
-    const yMin = mid + (pk.min * height / 2); 
-    const yMax = mid + (pk.max * height / 2);
+    const yMin = mid + (pk.min * waveHeight / 2); 
+    const yMax = mid + (pk.max * waveHeight / 2);
     const h = Math.max(2, yMax - yMin);
     
-    if (timeAtBar >= state.startTime && timeAtBar <= state.endTime) { ctx.fillStyle = '#007AFF'; } 
-    else { ctx.fillStyle = '#D1D1D6'; }
+    if (timeAtBar >= state.startTime && timeAtBar <= state.endTime) {
+        ctx.fillStyle = '#007AFF'; 
+    } else {
+        ctx.fillStyle = '#D1D1D6'; 
+    }
     ctx.fillRect(x, yMin, state.barWidth - 1, h);
   }
 }
 
 // Waveform Handles Dragging
-function startDrag(e, handle) { e.preventDefault(); draggingHandle = handle; document.addEventListener('touchmove', onDrag, { passive: false }); document.addEventListener('touchend', endDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag); }
+function startDrag(e, handle) { e.preventDefault(); draggingHandle = handle; document.addEventListener('touchmove', onDrag); document.addEventListener('touchend', endDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', endDrag); }
 function onDrag(e) {
   if (!draggingHandle) return; e.preventDefault();
   const rect = waveformContainer.getBoundingClientRect();
@@ -505,7 +458,7 @@ function onDrag(e) {
     state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time;
   } else {
     if (time <= state.startTime) time = state.startTime + 0.1; if (time > state.duration) time = state.duration;
-    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time - 0.5;
+    state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = time - 0.5; 
   }
   updateWaveformUI();
 }
@@ -515,133 +468,174 @@ handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
 handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'));
 handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
 
-// Bottom Sheet Picker
 function populateWheels() {
   const maxMin = Math.floor(state.duration / 60);
-  wheelMin.innerHTML = ''; wheelSec.innerHTML = '';
+  wheelMin.innerHTML = '';
+  wheelSec.innerHTML = '';
+  
   for(let i = 0; i <= maxMin; i++) {
-     const div = document.createElement('div'); div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0'); wheelMin.appendChild(div);
+     const div = document.createElement('div');
+     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     wheelMin.appendChild(div);
   }
   for(let i = 0; i <= 59; i++) {
-     const div = document.createElement('div'); div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0'); wheelSec.appendChild(div);
+     const div = document.createElement('div');
+     div.className = 'wheel-item'; div.textContent = String(i).padStart(2, '0');
+     wheelSec.appendChild(div);
   }
 }
+
 function syncWheelsToInputs() {
-  sheetMin.value = Math.round(wheelMin.scrollTop / 50);
-  sheetSec.value = Math.round(wheelSec.scrollTop / 50);
+  const minVal = Math.round(wheelMin.scrollTop / 50);
+  const secVal = Math.round(wheelSec.scrollTop / 50);
+  sheetMin.value = minVal;
+  sheetSec.value = secVal;
 }
+
 function syncInputsToWheels() {
-  let m = parseInt(sheetMin.value) || 0; let s = parseInt(sheetSec.value) || 0;
+  let m = parseInt(sheetMin.value) || 0;
+  let s = parseInt(sheetSec.value) || 0;
   const maxMin = Math.floor(state.duration / 60);
-  if(m > maxMin) m = maxMin; if(s > 59) s = 59;
-  wheelMin.scrollTo({ top: m * 50, behavior: 'smooth' }); wheelSec.scrollTo({ top: s * 50, behavior: 'smooth' });
+  if(m > maxMin) m = maxMin;
+  if(s > 59) s = 59;
+  
+  wheelMin.scrollTo({ top: m * 50, behavior: 'smooth' });
+  wheelSec.scrollTo({ top: s * 50, behavior: 'smooth' });
 }
+
 wheelMin.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
 wheelSec.addEventListener('scroll', () => { clearTimeout(wheelScrollTimeout); wheelScrollTimeout = setTimeout(syncWheelsToInputs, 100); });
-sheetMin.addEventListener('input', syncInputsToWheels); sheetSec.addEventListener('input', syncInputsToWheels);
+
+sheetMin.addEventListener('input', syncInputsToWheels);
+sheetSec.addEventListener('input', syncInputsToWheels);
 
 function openTimeSheet(target) {
   activeTarget = target;
   sheetTitle.textContent = target === 'start' ? 'Atur Waktu Mulai' : 'Atur Waktu Selesai';
   populateWheels();
+  
   let cur = target === 'start' ? state.startTime : state.endTime;
-  let m = Math.floor(cur / 60); let s = Math.floor(cur % 60);
-  sheetMin.value = m; sheetSec.value = s;
+  let m = Math.floor(cur / 60);
+  let s = Math.floor(cur % 60);
+  
+  sheetMin.value = m;
+  sheetSec.value = s;
+  
   timeSheet.classList.add('show');
-  setTimeout(() => { wheelMin.scrollTop = m * 50; wheelSec.scrollTop = s * 50; }, 50);
+  
+  setTimeout(() => {
+    wheelMin.scrollTop = m * 50;
+    wheelSec.scrollTop = s * 50;
+  }, 50);
 }
+
 startInput.addEventListener('click', () => openTimeSheet('start'));
 endInput.addEventListener('click', () => openTimeSheet('end'));
 timeSheet.addEventListener('click', (e) => { if (e.target === timeSheet) timeSheet.classList.remove('show'); });
 
 sheetDoneBtn.addEventListener('click', () => {
-   let m = parseInt(sheetMin.value) || 0; let s = parseInt(sheetSec.value) || 0;
+   let m = parseInt(sheetMin.value) || 0;
+   let s = parseInt(sheetSec.value) || 0;
    let time = m * 60 + s;
+   
    if(time > state.duration) time = state.duration;
+   
    if(activeTarget === 'start') {
-     if(time >= state.endTime) time = Math.max(0, state.endTime - 0.1);
-     state.startTime = time; startInput.value = formatTime(time); audioEl.currentTime = time;
+     if(time >= state.endTime) time = Math.max(0, state.endTime - 1);
+     state.startTime = time;
+     startInput.value = formatTime(time);
+     audioEl.currentTime = time;
    } else {
-     if(time <= state.startTime) time = Math.min(state.duration, state.startTime + 0.1);
-     state.endTime = time; endInput.value = formatTime(time); audioEl.currentTime = state.startTime;
+     if(time <= state.startTime) time = Math.min(state.duration, state.startTime + 1);
+     state.endTime = time;
+     endInput.value = formatTime(time);
+     audioEl.currentTime = state.startTime;
    }
+   
    updateWaveformUI();
    timeSheet.classList.remove('show');
 });
 
-// INSTANT WAV GENERATOR
-function bufferToWavBlob(buffer) {
-  const numOfChan = buffer.numberOfChannels,
-        length = buffer.length * numOfChan * 2 + 44,
-        bufferArr = new ArrayBuffer(length),
-        view = new DataView(bufferArr),
-        channels = [], i, sample;
-  let offset = 0, pos = 0;
+// Render WAV Cepat Tanpa Library Eksternal
+function encodeWAV(audioBuffer) {
+  const numOfChan = audioBuffer.numberOfChannels;
+  const length = audioBuffer.length * numOfChan * 2 + 44;
+  const buffer = new ArrayBuffer(length);
+  const view = new DataView(buffer);
+  const channels = [];
+  let sample = 0;
+  let offset = 0;
+  let pos = 0;
 
-  function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
-  function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+  const setUint32 = (data) => { view.setUint32(pos, data, true); pos += 4; };
+  const setUint16 = (data) => { view.setUint16(pos, data, true); pos += 2; };
+  const writeString = (s) => { for (let i = 0; i < s.length; i++) { view.setUint8(pos++, s.charCodeAt(i)); } };
 
-  setUint32(0x46464952); // "RIFF"
-  setUint32(length - 8); 
-  setUint32(0x45564157); // "WAVE"
-  setUint32(0x20746d66); // "fmt " chunk
-  setUint32(16);         
-  setUint16(1);          // raw PCM
+  writeString('RIFF');
+  setUint32(length - 8);
+  writeString('WAVE');
+  writeString('fmt ');
+  setUint32(16);
+  setUint16(1); 
   setUint16(numOfChan);
-  setUint32(buffer.sampleRate);
-  setUint32(buffer.sampleRate * 2 * numOfChan); 
-  setUint16(numOfChan * 2);                     
-  setUint16(16);                                
-  setUint32(0x61746164);                        
-  setUint32(length - pos - 4);                  
+  setUint32(audioBuffer.sampleRate);
+  setUint32(audioBuffer.sampleRate * 2 * numOfChan);
+  setUint16(numOfChan * 2);
+  setUint16(16);
+  writeString('data');
+  setUint32(length - pos - 4);
 
-  for (let i = 0; i < numOfChan; i++) channels.push(buffer.getChannelData(i));
+  for (let i = 0; i < audioBuffer.numberOfChannels; i++) { channels.push(audioBuffer.getChannelData(i)); }
 
   while (pos < length) {
     for (let i = 0; i < numOfChan; i++) {
       sample = Math.max(-1, Math.min(1, channels[i][offset]));
-      sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
       view.setInt16(pos, sample, true);
       pos += 2;
     }
     offset++;
   }
-  return new Blob([bufferArr], { type: 'audio/wav' });
+  return new Blob([buffer], { type: 'audio/wav' });
 }
 
 cutBtn.addEventListener('click', async () => {
   const start = state.startTime; const end = state.endTime;
   if (end <= start) { showToast('Waktu selesai harus lebih besar'); return; }
+  if (end > state.duration + 0.01) { showToast('Waktu selesai melebihi durasi'); return; }
 
   try {
-    cutBtn.disabled = true; cutBtn.textContent = 'Memproses...'; showToast('Memotong instan…');
-    await new Promise(r => setTimeout(r, 20));
+    cutBtn.disabled = true; cutBtn.textContent = 'Memproses...'; 
+    showToast('Memotong & mengekspor WAV...');
+    await new Promise(r => setTimeout(r, 50));
 
     const sr = state.audioBuffer.sampleRate;
     const startSample = Math.max(0, Math.floor(start * sr));
     const endSample = Math.min(state.audioBuffer.length, Math.floor(end * sr));
     const length = Math.max(1, endSample - startSample);
-    const numCh = Math.min(2, state.audioBuffer.numberOfChannels);
+    let numCh = state.audioBuffer.numberOfChannels; if (numCh > 2) numCh = 2;
 
-    // KOREKSI KOMPATIBILITAS OFFLINE AUDIO CONTEXT
-    const OfflineAudioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    const ctx = new OfflineAudioCtx(numCh, length, sr);
-    
+    const ctx = new OfflineAudioContext(numCh, length, sr);
     const sliced = ctx.createBuffer(numCh, length, sr);
     for (let ch = 0; ch < numCh; ch++) {
       const src = state.audioBuffer.getChannelData(ch); const dst = sliced.getChannelData(ch);
       for (let i = 0; i < length; i++) dst[i] = src[startSample + i];
     }
+    const source = ctx.createBufferSource(); source.buffer = sliced; source.connect(ctx.destination); source.start(0);
+    const rendered = await ctx.startRendering();
 
-    const wavBlob = bufferToWavBlob(sliced);
+    showToast('Menyimpan ke memori...'); await new Promise(r => setTimeout(r, 50));
+    const wavBlob = encodeWAV(rendered);
     const finalName = state.fileName + '_cut.wav';
     
     await saveOutputToDB(finalName, wavBlob);
     
+    // Auto download - opsional, bisa dimatikan jika cukup simpan di db
     const url = URL.createObjectURL(wavBlob);
     const a = document.createElement('a'); a.href = url; a.download = finalName;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
+    
     showToast('Audio berhasil dipotong instan ✓');
   } catch (err) { showToast('Gagal memproses audio'); console.error(err); }
   finally { cutBtn.disabled = false; cutBtn.textContent = 'Potong & Simpan Audio'; }
@@ -654,7 +648,6 @@ resetBtn.addEventListener('click', () => {
   playIcon.style.display = 'block'; pauseIcon.style.display = 'none';
 });
 
-// Output Page & Rename Logic
 async function loadOutputs() {
   const items = await getOutputs(); const listEl = document.getElementById('outputList');
   listEl.innerHTML = '';
@@ -665,59 +658,65 @@ async function loadOutputs() {
     const div = document.createElement('div'); div.className = 'output-item';
     const url = URL.createObjectURL(item.blob);
     const dateStr = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    // UI Item dengan tambahan Tombol Edit (Ganti Nama)
     div.innerHTML = `
       <button class="play-btn output-play-btn">
         <svg class="play-ic" viewBox="0 0 24 24" fill="white"><polygon points="6,4 20,12 6,20"/></svg>
         <svg class="pause-ic" viewBox="0 0 24 24" fill="white" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
       </button>
       <div class="output-info">
-        <div class="output-name-container">
-          <div class="output-name">${item.name}</div>
-          <button class="output-rename-btn" title="Ubah Nama">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-        </div>
+        <div class="output-name">${item.name}</div>
         <div class="output-meta">${(item.blob.size / 1024).toFixed(0)} KB • ${dateStr}</div>
       </div>
       <div class="output-actions">
-        <button class="output-download"><svg viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
-        <button class="output-delete"><svg viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        <button class="output-edit" title="Ganti Nama">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+        <button class="output-download" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+        <button class="output-delete" title="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>
       <audio src="${url}"></audio>
     `;
-    const playBtnOut = div.querySelector('.output-play-btn');
+    
+    const playBtnOut = div.querySelector('.play-btn');
     const audioOut = div.querySelector('audio');
     const playIcOut = div.querySelector('.play-ic'); const pauseIcOut = div.querySelector('.pause-ic');
+    const editBtn = div.querySelector('.output-edit');
     const dlBtn = div.querySelector('.output-download'); const delBtn = div.querySelector('.output-delete');
-    const renameBtn = div.querySelector('.output-rename-btn');
     
+    // Play/Pause Logika
     playBtnOut.addEventListener('click', () => {
-      if (audioOut.paused) { 
-        document.querySelectorAll('#outputList audio').forEach(a => { if(a!==audioOut){ a.pause(); const p=a.parentElement.querySelector('.play-ic'); const s=a.parentElement.querySelector('.pause-ic'); if(p){p.style.display='block'; s.style.display='none';} } });
-        audioOut.play(); playIcOut.style.display = 'none'; pauseIcOut.style.display = 'block'; 
-      }
+      if (audioOut.paused) { audioOut.play(); playIcOut.style.display = 'none'; pauseIcOut.style.display = 'block'; }
       else { audioOut.pause(); playIcOut.style.display = 'block'; pauseIcOut.style.display = 'none'; }
     });
     audioOut.addEventListener('ended', () => { playIcOut.style.display = 'block'; pauseIcOut.style.display = 'none'; });
-    dlBtn.addEventListener('click', () => { const a = document.createElement('a'); a.href = url; a.download = item.name; document.body.appendChild(a); a.click(); a.remove(); });
-    delBtn.addEventListener('click', async () => { await deleteOutput(item.id); URL.revokeObjectURL(url); loadOutputs(); showToast('Audio dihapus'); });
     
-    renameBtn.addEventListener('click', async () => {
-      const newName = prompt('Masukkan nama baru untuk file audio:', item.name);
-      if (newName === null) return;
-      const trimmed = newName.trim();
-      if (trimmed === '') { showToast('Nama tidak boleh kosong'); return; }
-      try {
-        let ext = trimmed.split('.').pop().toLowerCase();
-        let formattedName = trimmed;
-        if (ext !== 'wav' && ext !== 'mp3') formattedName += '.wav';
-        await updateOutputName(item.id, formattedName);
-        URL.revokeObjectURL(url);
-        await loadOutputs();
-        showToast('Nama file berhasil diubah ✓');
-      } catch (err) { showToast('Gagal mengubah nama'); }
+    // Ganti Nama Logika
+    editBtn.addEventListener('click', async () => {
+       const namaLamaTanpaExt = item.name.replace(/\.[^.]+$/, '');
+       const inputBaru = prompt("Masukkan nama file baru:", namaLamaTanpaExt);
+       
+       if (inputBaru && inputBaru.trim() !== '') {
+           const ext = '.wav';
+           let finalName = inputBaru.trim();
+           // Pastikan ekstensi .wav terbawa
+           if (!finalName.toLowerCase().endsWith(ext)) finalName += ext;
+           
+           await updateOutputName(item.id, finalName);
+           loadOutputs(); // reload list
+           showToast('Nama berhasil diubah');
+       }
     });
 
+    // Download Logika
+    dlBtn.addEventListener('click', () => { const a = document.createElement('a'); a.href = url; a.download = item.name; document.body.appendChild(a); a.click(); a.remove(); });
+    
+    // Hapus Logika
+    delBtn.addEventListener('click', async () => { await deleteOutput(item.id); URL.revokeObjectURL(url); loadOutputs(); showToast('Audio dihapus'); });
+    
     listEl.appendChild(div);
   }
 }
