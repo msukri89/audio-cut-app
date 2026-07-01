@@ -47,7 +47,7 @@ body {
 .card-header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
 .card-body { padding: 10px 16px 16px; }
 
-/* FIX 1: Hiding input file safely */
+/* Hiding input file safely */
 #fileInput { opacity: 0; position: absolute; z-index: -1; width: 1px; height: 1px; }
 
 .dropzone { display: block; border: 2px dashed var(--separator-strong); border-radius: 12px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; background: #FAFAFA; }
@@ -148,7 +148,6 @@ audio { display: none; }
           <div class="primary">Pilih atau seret file audio di sini</div>
           <div class="secondary">MP3, WAV, M4A, atau AAC</div>
         </label>
-        <!-- FIX 1 (Lanjutan): Input file bebas display:none -->
         <input type="file" id="fileInput" accept="audio/*">
       </div>
     </div>
@@ -318,13 +317,13 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// FIX 2: Reset input value agar user bisa memilih file yang sama berulang kali tanpa macet
-fileInput.addEventListener('click', (e) => { e.target.value = null; });
-
+// FIX 1: Event click di-remove untuk mencegah dialog file picker ter-abort secara tidak sengaja di iOS/Chrome Mobile
 fileInput.addEventListener('change', async (e) => { 
   const file = e.target.files[0]; 
   if (file) {
     await loadFile(file);
+    // FIX 2: Reset value dipindah ke sini agar aman & bisa upload file yang sama berkali-kali tanpa crash
+    fileInput.value = ''; 
   }
 });
 
@@ -362,7 +361,6 @@ async function loadFile(file) {
     });
 
     showToast('Mendecode audio...');
-    // FIX 3: Gunakan struktur callback explisit pada decodeAudioData untuk memastikan kompatibilitas 100% di semua Safari/Chrome versi lama
     state.audioBuffer = await new Promise((resolve, reject) => {
         state.audioCtx.decodeAudioData(
             arrayBuffer, 
@@ -391,11 +389,12 @@ async function loadFile(file) {
     resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    requestAnimationFrame(() => { 
+    // FIX 3: Menggunakan setTimeout untuk memberikan jeda waktu agar DOM menghitung lebar/lebar kontainer secara akurat sebelum generatePeaks dijalankan
+    setTimeout(() => { 
       generatePeaks(state.audioBuffer); 
-    });
+      showToast('Audio siap dipotong');
+    }, 100);
     
-    showToast('Audio siap dipotong');
   } catch (err) { 
     showToast('Error: ' + err.message); 
     console.error(err); 
@@ -430,15 +429,23 @@ progressTrack.addEventListener('click', (e) => {
 // Waveform Canvas
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  const rect = waveformCanvas.getBoundingClientRect();
-  waveformCanvas.width = rect.width * dpr; waveformCanvas.height = rect.height * dpr;
-  const ctx = waveformCanvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width: rect.width, height: rect.height };
+  let rect = waveformCanvas.getBoundingClientRect();
+  let w = rect.width;
+  let h = rect.height;
+  // FIX 4: Fallback dimensi jika bounding rect terbaca 0 karena delay render CSS flexbox
+  if (w === 0 || h === 0) {
+    w = waveformContainer.clientWidth || 448;
+    h = waveformContainer.clientHeight || 120;
+  }
+  waveformCanvas.width = w * dpr; 
+  waveformCanvas.height = h * dpr;
+  const ctx = waveformCanvas.getContext('2d'); 
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, width: w, height: h };
 }
+
 function generatePeaks(buffer) {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
-  if(width === 0) return;
-  
+  let width = waveformCanvas.clientWidth || waveformContainer.clientWidth || 448;
   const data = buffer.getChannelData(0); 
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
@@ -456,13 +463,16 @@ function generatePeaks(buffer) {
   state.barWidth = barWidth;
   updateWaveformUI();
 }
+
 function updateWaveformUI() {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
+  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth || 448;
   state.startPx = (state.startTime / state.duration) * width;
   state.endPx = (state.endTime / state.duration) * width;
-  handleStart.style.left = state.startPx + 'px'; handleEnd.style.left = state.endPx + 'px';
+  handleStart.style.left = state.startPx + 'px'; 
+  handleEnd.style.left = state.endPx + 'px';
   drawWaveform();
 }
+
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
   if (width === 0 || height === 0) return;
@@ -711,7 +721,8 @@ async function loadOutputs() {
 }
 
 openDB().then(() => { loadOutputs(); });
-window.addEventListener('resize', () => { if (state.peaks.length > 0) { generatePeaks(state.audioBuffer); } });
+// FIX 5: Perbaikan logika resize menggunakan state.audioBuffer agar gambar waveform tidak hilang saat orientasi device berubah
+window.addEventListener('resize', () => { if (state.audioBuffer) { generatePeaks(state.audioBuffer); } });
 </script>
 </body>
 </html>
