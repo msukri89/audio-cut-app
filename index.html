@@ -47,7 +47,6 @@ body {
 .card-header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
 .card-body { padding: 10px 16px 16px; }
 
-/* Hiding input file safely */
 #fileInput { opacity: 0; position: absolute; z-index: -1; width: 1px; height: 1px; }
 
 .dropzone { display: block; border: 2px dashed var(--separator-strong); border-radius: 12px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; background: #FAFAFA; }
@@ -284,7 +283,6 @@ const sheetDoneBtn = document.getElementById('sheetDoneBtn');
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(() => toast.classList.remove('show'), 2400); }
 function formatTime(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
-function parseTime(str) { const parts = String(str).split(':').map(p => p.trim()); if (parts.length === 1) { const n = parseFloat(parts[0]); return isNaN(n) ? 0 : n; } if (parts.length === 2) { return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0); } return 0; }
 
 // IndexedDB Setup
 function openDB() { return new Promise((resolve) => { const req = indexedDB.open('AudioCutDB', 1); req.onupgradeneeded = (e) => { const d = e.target.result; if (!d.objectStoreNames.contains('outputs')) d.createObjectStore('outputs', { keyPath: 'id', autoIncrement: true }); }; req.onsuccess = (e) => { db = e.target.result; resolve(); }; }); }
@@ -317,14 +315,27 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-// FIX 1: Event click di-remove untuk mencegah dialog file picker ter-abort secara tidak sengaja di iOS/Chrome Mobile
+// MEMAKSA AUDIOCONTEXT UNTUK TERBANGUN DI PERANGKAT MOBILE
+function unlockAudio() {
+    if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+    }
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+}
+document.addEventListener('click', unlockAudio);
+document.addEventListener('touchstart', unlockAudio);
+
 fileInput.addEventListener('change', async (e) => { 
   const file = e.target.files[0]; 
   if (file) {
     await loadFile(file);
-    // FIX 2: Reset value dipindah ke sini agar aman & bisa upload file yang sama berkali-kali tanpa crash
-    fileInput.value = ''; 
   }
+  // Reset dilakukan di sini BUKAN di event 'click' untuk mencegah error pada mobile browser
+  e.target.value = '';
 });
 
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -389,12 +400,11 @@ async function loadFile(file) {
     resetBtn.classList.remove('hidden');
     cutBtn.disabled = false;
     
-    // FIX 3: Menggunakan setTimeout untuk memberikan jeda waktu agar DOM menghitung lebar/lebar kontainer secara akurat sebelum generatePeaks dijalankan
-    setTimeout(() => { 
+    requestAnimationFrame(() => { 
       generatePeaks(state.audioBuffer); 
-      showToast('Audio siap dipotong');
-    }, 100);
+    });
     
+    showToast('Audio siap dipotong');
   } catch (err) { 
     showToast('Error: ' + err.message); 
     console.error(err); 
@@ -429,23 +439,15 @@ progressTrack.addEventListener('click', (e) => {
 // Waveform Canvas
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  let rect = waveformCanvas.getBoundingClientRect();
-  let w = rect.width;
-  let h = rect.height;
-  // FIX 4: Fallback dimensi jika bounding rect terbaca 0 karena delay render CSS flexbox
-  if (w === 0 || h === 0) {
-    w = waveformContainer.clientWidth || 448;
-    h = waveformContainer.clientHeight || 120;
-  }
-  waveformCanvas.width = w * dpr; 
-  waveformCanvas.height = h * dpr;
-  const ctx = waveformCanvas.getContext('2d'); 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width: w, height: h };
+  const rect = waveformCanvas.getBoundingClientRect();
+  waveformCanvas.width = rect.width * dpr; waveformCanvas.height = rect.height * dpr;
+  const ctx = waveformCanvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, width: rect.width, height: rect.height };
 }
-
 function generatePeaks(buffer) {
-  let width = waveformCanvas.clientWidth || waveformContainer.clientWidth || 448;
+  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
+  if(width === 0) return;
+  
   const data = buffer.getChannelData(0); 
   const barWidth = 3; 
   const numBars = Math.floor(width / barWidth);
@@ -463,16 +465,13 @@ function generatePeaks(buffer) {
   state.barWidth = barWidth;
   updateWaveformUI();
 }
-
 function updateWaveformUI() {
-  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth || 448;
+  const width = waveformCanvas.clientWidth || waveformContainer.clientWidth;
   state.startPx = (state.startTime / state.duration) * width;
   state.endPx = (state.endTime / state.duration) * width;
-  handleStart.style.left = state.startPx + 'px'; 
-  handleEnd.style.left = state.endPx + 'px';
+  handleStart.style.left = state.startPx + 'px'; handleEnd.style.left = state.endPx + 'px';
   drawWaveform();
 }
-
 function drawWaveform() {
   const { ctx, width, height } = setupCanvas();
   if (width === 0 || height === 0) return;
@@ -624,7 +623,10 @@ cutBtn.addEventListener('click', async () => {
     const length = Math.max(1, endSample - startSample);
     const numCh = Math.min(2, state.audioBuffer.numberOfChannels);
 
-    const ctx = new OfflineAudioContext(numCh, length, sr);
+    // KOREKSI KOMPATIBILITAS OFFLINE AUDIO CONTEXT
+    const OfflineAudioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const ctx = new OfflineAudioCtx(numCh, length, sr);
+    
     const sliced = ctx.createBuffer(numCh, length, sr);
     for (let ch = 0; ch < numCh; ch++) {
       const src = state.audioBuffer.getChannelData(ch); const dst = sliced.getChannelData(ch);
@@ -721,8 +723,7 @@ async function loadOutputs() {
 }
 
 openDB().then(() => { loadOutputs(); });
-// FIX 5: Perbaikan logika resize menggunakan state.audioBuffer agar gambar waveform tidak hilang saat orientasi device berubah
-window.addEventListener('resize', () => { if (state.audioBuffer) { generatePeaks(state.audioBuffer); } });
+window.addEventListener('resize', () => { if (state.peaks.length > 0) { generatePeaks(state.audioBuffer); } });
 </script>
 </body>
 </html>
